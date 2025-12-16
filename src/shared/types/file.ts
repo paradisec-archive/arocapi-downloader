@@ -1,0 +1,53 @@
+export type MediaType =
+  | 'audio/wav'
+  | 'audio/mpeg'
+  | 'video/x-matroska'
+  | 'video/x-msvideo'
+  | 'video/mxf'
+  | string
+
+export type QualityTier = 'archival' | 'presentation'
+
+export type FileType = 'audio' | 'video' | 'other'
+
+export type FileAccess = {
+  content: boolean
+}
+
+export type RoCrateFile = {
+  id: string
+  filename: string
+  mediaType: MediaType
+  size: number
+  memberOf: string
+  access?: FileAccess
+}
+
+export type FileWithQuality = RoCrateFile & {
+  qualityTier: QualityTier
+  fileType: FileType
+}
+
+export const ARCHIVAL_AUDIO_TYPES = ['audio/wav', 'audio/x-wav']
+export const COMPRESSED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3']
+export const ARCHIVAL_VIDEO_TYPES = ['video/x-matroska', 'video/mxf', 'video/x-msvideo']
+
+export const getFileType = (mediaType: string): FileType => {
+  if (mediaType.startsWith('audio/')) {
+    return 'audio'
+  }
+
+  if (mediaType.startsWith('video/')) {
+    return 'video'
+  }
+
+  return 'other'
+}
+
+export const getQualityTier = (mediaType: string): QualityTier => {
+  if (ARCHIVAL_AUDIO_TYPES.includes(mediaType) || ARCHIVAL_VIDEO_TYPES.includes(mediaType)) {
+    return 'archival'
+  }
+
+  return 'presentation'
+}
