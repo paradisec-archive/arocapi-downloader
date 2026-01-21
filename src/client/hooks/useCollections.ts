@@ -1,13 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 
 export const useCollections = (limit = 50, offset = 0) => {
   return useQuery({
     queryKey: ['collections', limit, offset],
     queryFn: () => api.getCollections(limit, offset),
     staleTime: 5 * 60 * 1000,
-  })
-}
+    placeholderData: keepPreviousData,
+  });
+};
 
 export const useCollection = (id: string) => {
   return useQuery({
@@ -15,5 +16,5 @@ export const useCollection = (id: string) => {
     queryFn: () => api.getCollection(id),
     staleTime: 5 * 60 * 1000,
     enabled: !!id,
-  })
-}
+  });
+};

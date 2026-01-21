@@ -1,14 +1,14 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
-import { config } from './config.ts'
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { config } from './config.ts';
 
-const sesClient = new SESClient({ region: config.AWS_REGION })
+const sesClient = new SESClient({ region: config.AWS_REGION });
 
 type SendDownloadEmailParams = {
-  to: string
-  downloadUrl: string
-  fileCount: number
-  totalSize: string
-}
+  to: string;
+  downloadUrl: string;
+  fileCount: number;
+  totalSize: string;
+};
 
 export const sendDownloadEmail = async ({
   to,
@@ -76,7 +76,7 @@ This link will expire in 24 hours.
         },
       },
     },
-  })
+  });
 
-  await sesClient.send(command)
-}
+  await sesClient.send(command);
+};

@@ -1,10 +1,21 @@
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCollections } from '@/hooks/useCollections'
-import { CollectionItem } from './CollectionItem'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Pagination } from '@/components/ui/pagination';
+import { useCollections } from '@/hooks/useCollections';
+import { CollectionItem } from './CollectionItem';
 
-export const CollectionList = () => {
-  const { data, isLoading, error } = useCollections()
+const PAGE_SIZE = 50;
+
+type CollectionListProps = {
+  page: number;
+  onPageChange: (page: number) => void;
+};
+
+export const CollectionList = ({ page, onPageChange }: CollectionListProps) => {
+  const offset = (page - 1) * PAGE_SIZE;
+  const { data, isLoading, error } = useCollections(PAGE_SIZE, offset);
+
+  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
 
   if (isLoading) {
     return (
@@ -14,7 +25,7 @@ export const CollectionList = () => {
           <span className="ml-2">Loading collections...</span>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -24,7 +35,7 @@ export const CollectionList = () => {
           Error loading collections: {error.message}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!data?.entities.length) {
@@ -34,7 +45,7 @@ export const CollectionList = () => {
           No collections found.
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -47,6 +58,11 @@ export const CollectionList = () => {
           <CollectionItem key={collection.id} collection={collection} />
         ))}
       </CardContent>
+      {totalPages > 1 && (
+        <div className="border-t px-6 py-4">
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
+        </div>
+      )}
     </Card>
-  )
-}
+  );
+};

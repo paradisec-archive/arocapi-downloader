@@ -1,53 +1,109 @@
-import { formatFileSize } from '../shared/formatters.ts'
-import type { ExportJobMessage } from '../shared/types/index.ts'
-import { sendDownloadEmail } from './services/email.ts'
-import { downloadFileWithMetadata } from './services/rocrate.ts'
-import { generatePresignedUrl, uploadToS3 } from './services/s3.ts'
-import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper.ts'
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { formatFileSize } from '../shared/formatters.ts';
+import type { ExportFileInfo, ExportJobMessage } from '../shared/types/index.ts';
+import { sendDownloadEmail } from './services/email.ts';
+import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate.ts';
+import { generatePresignedUrl, uploadToS3 } from './services/s3.ts';
+import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper.ts';
+
+type FilesByItem = Map<string, { itemId: string; collectionId: string; files: ExportFileInfo[] }>;
+
+const groupFilesByItem = async (
+  files: ExportFileInfo[],
+  accessToken?: string,
+): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
+  const filesByItem: FilesByItem = new Map();
+  const itemCache = new Map<string, string>(); // itemId -> collectionId
+  let totalSize = 0;
+
+  for (const file of files) {
+    totalSize += file.size;
+    const itemId = file.memberOf.id;
+
+    // Get collection ID for this item (with caching)
+    let collectionId = itemCache.get(itemId);
+    if (!collectionId) {
+      console.log(`Fetching metadata for item: ${itemId}`);
+      const itemMetadata = await getEntityMetadata(itemId, accessToken);
+      collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
+      itemCache.set(itemId, collectionId);
+    }
+
+    // Group files by item
+    const key = `${collectionId}/${itemId}`;
+    const existing = filesByItem.get(key);
+    if (existing) {
+      existing.files.push(file);
+    } else {
+      filesByItem.set(key, { itemId, collectionId, files: [file] });
+    }
+  }
+
+  return { filesByItem, totalSize };
+};
 
 export const processJob = async (job: ExportJobMessage): Promise<void> => {
-  const { jobId, fileIds, email } = job
+  const { jobId, files, email, accessToken } = job;
 
-  console.log(`Processing job ${jobId}: ${fileIds.length} files for ${email}`)
+  console.log(`Processing job ${jobId}: ${files.length} files for ${email}`);
 
-  const workDir = await createWorkDir(jobId)
+  const workDir = await createWorkDir(jobId);
 
   try {
-    let totalSize = 0
+    // Group files by collection/item hierarchy
+    console.log('Grouping files by collection and item...');
+    const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
 
-    for (let i = 0; i < fileIds.length; i++) {
-      const fileId = fileIds[i]
-      console.log(`Downloading file ${i + 1}/${fileIds.length}: ${fileId}`)
+    // Process each item group
+    let downloadedCount = 0;
+    for (const [, { itemId, collectionId, files: itemFiles }] of filesByItem) {
+      // Create directory structure: collection/item/
+      const itemDir = join(workDir, collectionId, itemId);
+      await mkdir(itemDir, { recursive: true });
 
-      try {
-        const { metadata } = await downloadFileWithMetadata(fileId, workDir)
-        totalSize += metadata.size
-      } catch (error) {
-        console.error(`Failed to download file ${fileId}:`, error)
-        throw error
+      console.log(
+        `Processing item ${itemId} in collection ${collectionId}: ${itemFiles.length} files`,
+      );
+
+      // Download RO-Crate metadata for the item
+      console.log(`Downloading RO-Crate metadata for item: ${itemId}`);
+      await saveRoCrateMetadata(itemId, itemDir, accessToken);
+
+      // Download each file into the item directory
+      for (const file of itemFiles) {
+        downloadedCount++;
+        console.log(`Downloading file ${downloadedCount}/${files.length}: ${file.name}`);
+
+        try {
+          await downloadFile(file.id, itemDir, file.name, accessToken);
+        } catch (error) {
+          console.error(`Failed to download file ${file.id}:`, error);
+          throw error;
+        }
       }
     }
 
-    console.log(`Creating zip archive for job ${jobId}`)
-    const zipPath = await createZipArchive(workDir, jobId)
+    console.log(`Creating zip archive for job ${jobId}`);
+    const zipPath = await createZipArchive(workDir, jobId);
 
-    const s3Key = `exports/${jobId}.zip`
-    console.log(`Uploading to S3: ${s3Key}`)
-    await uploadToS3(zipPath, s3Key)
+    const s3Key = `exports/${jobId}.zip`;
+    console.log(`Uploading to S3: ${s3Key}`);
+    await uploadToS3(zipPath, s3Key);
 
-    console.log(`Generating presigned URL`)
-    const downloadUrl = await generatePresignedUrl(s3Key)
+    console.log(`Generating presigned URL`);
+    const downloadUrl = await generatePresignedUrl(s3Key);
 
-    console.log(`Sending email to ${email}`)
+    console.log(`Sending email to ${email}`);
     await sendDownloadEmail({
       to: email,
       downloadUrl,
-      fileCount: fileIds.length,
+      fileCount: files.length,
       totalSize: formatFileSize(totalSize),
-    })
+    });
 
-    console.log(`Job ${jobId} completed successfully`)
+    console.log(`Job ${jobId} completed successfully`);
   } finally {
-    await cleanupWorkDir(workDir)
+    await cleanupWorkDir(workDir);
   }
-}
+};

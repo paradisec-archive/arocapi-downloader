@@ -1,13 +1,13 @@
-import type { Entity } from '@shared/types/index'
-import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useSelectionStore } from '@/store/selectionStore'
-import { ItemList } from './ItemList'
+import type { Entity } from '@shared/types/index';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSelectionStore } from '@/store/selectionStore';
+import { ItemList } from './ItemList';
 
 type CollectionItemProps = {
-  collection: Entity
-}
+  collection: Entity;
+};
 
 export const CollectionItem = ({ collection }: CollectionItemProps) => {
   const {
@@ -17,23 +17,23 @@ export const CollectionItem = ({ collection }: CollectionItemProps) => {
     deselectCollection,
     toggleCollectionExpand,
     getCollectionSelectionState,
-  } = useSelectionStore()
+  } = useSelectionStore();
 
-  const selectionState = getCollectionSelectionState(collection.id)
-  const isExpanded = expandedCollections.has(collection.id)
-  const isPending = pendingCollections.has(collection.id)
+  const selectionState = getCollectionSelectionState(collection.id);
+  const isExpanded = expandedCollections.has(collection.id);
+  const isPending = pendingCollections.has(collection.id);
 
   const handleCheckboxChange = () => {
     if (selectionState === 'none') {
-      selectCollection(collection.id)
+      selectCollection(collection.id);
     } else {
-      deselectCollection(collection.id)
+      deselectCollection(collection.id);
     }
-  }
+  };
 
   const handleExpandClick = () => {
-    toggleCollectionExpand(collection.id)
-  }
+    toggleCollectionExpand(collection.id);
+  };
 
   return (
     <div className="border rounded-lg">
@@ -73,5 +73,5 @@ export const CollectionItem = ({ collection }: CollectionItemProps) => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};

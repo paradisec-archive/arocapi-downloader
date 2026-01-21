@@ -1,14 +1,14 @@
-import type { QueryClient } from '@tanstack/react-query'
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
-import { Header } from '@/components/layout/Header'
+import type { QueryClient } from '@tanstack/react-query';
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { Header } from '@/components/layout/Header';
 
 type RouterContext = {
-  queryClient: QueryClient
-}
+  queryClient: QueryClient;
+};
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   component: RootLayout,
-})
+});
 
 function RootLayout() {
   return (
@@ -21,5 +21,5 @@ function RootLayout() {
         RO-Crate Downloader
       </footer>
     </div>
-  )
+  );
 }

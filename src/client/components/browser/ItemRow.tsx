@@ -1,13 +1,13 @@
-import type { Entity } from '@shared/types/index'
-import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
-import { useSelectionStore } from '@/store/selectionStore'
-import { FileList } from './FileList'
+import type { Entity } from '@shared/types/index';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useSelectionStore } from '@/store/selectionStore';
+import { FileList } from './FileList';
 
 type ItemRowProps = {
-  item: Entity
-}
+  item: Entity;
+};
 
 export const ItemRow = ({ item }: ItemRowProps) => {
   const {
@@ -17,23 +17,23 @@ export const ItemRow = ({ item }: ItemRowProps) => {
     deselectItem,
     toggleItemExpand,
     getItemSelectionState,
-  } = useSelectionStore()
+  } = useSelectionStore();
 
-  const selectionState = getItemSelectionState(item.id)
-  const isExpanded = expandedItems.has(item.id)
-  const isPending = pendingItems.has(item.id)
+  const selectionState = getItemSelectionState(item.id);
+  const isExpanded = expandedItems.has(item.id);
+  const isPending = pendingItems.has(item.id);
 
   const handleCheckboxChange = () => {
     if (selectionState === 'none') {
-      selectItem(item.id)
+      selectItem(item.id);
     } else {
-      deselectItem(item.id)
+      deselectItem(item.id);
     }
-  }
+  };
 
   const handleExpandClick = () => {
-    toggleItemExpand(item.id)
-  }
+    toggleItemExpand(item.id);
+  };
 
   return (
     <div className="border rounded-lg bg-background">
@@ -73,5 +73,5 @@ export const ItemRow = ({ item }: ItemRowProps) => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};

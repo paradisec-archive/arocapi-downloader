@@ -1,48 +1,48 @@
-import { getFileType, getQualityTier } from '@shared/types/file'
-import type { RoCrateFile } from '@shared/types/index'
-import { File, Lock, Music, Video } from 'lucide-react'
-import { FileSize } from '@/components/common/FileSize'
-import { Checkbox } from '@/components/ui/checkbox'
-import { cn } from '@/lib/utils'
-import { useSelectionStore } from '@/store/selectionStore'
+import { getFileType, getQualityTier } from '@shared/types/file';
+import type { RoCrateFile } from '@shared/types/index';
+import { File, Lock, Music, Video } from 'lucide-react';
+import { FileSize } from '@/components/common/FileSize';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
+import { useSelectionStore } from '@/store/selectionStore';
 
 type FileRowProps = {
-  file: RoCrateFile
-  disabled?: boolean
-}
+  file: RoCrateFile;
+  disabled?: boolean;
+};
 
 export const FileRow = ({ file, disabled = false }: FileRowProps) => {
-  const { selectedFiles, toggleFileSelection } = useSelectionStore()
+  const { selectedFiles, toggleFileSelection } = useSelectionStore();
 
-  const isSelected = selectedFiles.has(file.id)
-  const fileType = getFileType(file.mediaType)
-  const qualityTier = getQualityTier(file.mediaType)
-  const hasAccess = file.access?.content !== false
+  const isSelected = selectedFiles.has(file.id);
+  const fileType = getFileType(file.mediaType);
+  const qualityTier = getQualityTier(file.mediaType);
+  const hasAccess = file.access?.content !== false;
 
-  const isDisabled = disabled || !hasAccess
+  const isDisabled = disabled || !hasAccess;
 
   const handleCheckboxChange = () => {
     if (!isDisabled) {
-      toggleFileSelection(file.id)
+      toggleFileSelection(file.id);
     }
-  }
+  };
 
   const getFileIcon = () => {
     switch (fileType) {
       case 'audio':
-        return <Music className="h-4 w-4" />
+        return <Music className="h-4 w-4" />;
       case 'video':
-        return <Video className="h-4 w-4" />
+        return <Video className="h-4 w-4" />;
       default:
-        return <File className="h-4 w-4" />
+        return <File className="h-4 w-4" />;
     }
-  }
+  };
 
   return (
     <div
       className={cn(
         'flex items-center gap-2 p-1.5 rounded',
-        isDisabled ? 'opacity-40' : 'hover:bg-muted/50'
+        isDisabled ? 'opacity-40' : 'hover:bg-muted/50',
       )}
     >
       <Checkbox
@@ -71,7 +71,7 @@ export const FileRow = ({ file, disabled = false }: FileRowProps) => {
             'text-xs px-1.5 py-0.5 rounded',
             qualityTier === 'archival'
               ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
           )}
         >
           {qualityTier}
@@ -82,5 +82,5 @@ export const FileRow = ({ file, disabled = false }: FileRowProps) => {
         <FileSize bytes={file.size} />
       </span>
     </div>
-  )
-}
+  );
+};

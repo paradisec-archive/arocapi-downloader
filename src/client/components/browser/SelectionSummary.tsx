@@ -1,61 +1,62 @@
-import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { Download, Loader2, Trash2 } from 'lucide-react'
-import { FileSize } from '@/components/common/FileSize'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { Button } from '@/components/ui/button'
-import { api } from '@/lib/api'
-import { useSelectionStore } from '@/store/selectionStore'
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import { Download, Loader2, Trash2 } from 'lucide-react';
+import { FileSize } from '@/components/common/FileSize';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
+import { useSelectionStore } from '@/store/selectionStore';
 
 type SelectionSummaryProps = {
-  userEmail?: string
-}
+  userEmail?: string;
+};
 
 export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const {
-    getSelectedFileIds,
+    getSelectedFiles,
     getTotalSelectedSize,
     audioQuality,
     videoQuality,
     clearSelection,
     getPendingInfo,
-  } = useSelectionStore()
+  } = useSelectionStore();
 
-  const selectedFileIds = getSelectedFileIds()
-  const totalSize = getTotalSelectedSize()
-  const { pendingCollections, pendingItems } = getPendingInfo()
-  const hasPending = pendingCollections > 0 || pendingItems > 0
+  const selectedFiles = getSelectedFiles();
+  const totalSize = getTotalSelectedSize();
+  const { pendingCollections, pendingItems } = getPendingInfo();
+  const hasPending = pendingCollections > 0 || pendingItems > 0;
 
   const exportMutation = useMutation({
     mutationFn: (email: string) =>
       api.submitExport({
-        fileIds: selectedFileIds,
+        files: selectedFiles.map((f) => ({
+          id: f.id,
+          name: f.name,
+          size: f.size,
+          memberOf: f.memberOf,
+        })),
         email,
-        qualityPreferences: {
-          audio: audioQuality,
-          video: videoQuality,
-        },
       }),
     onSuccess: () => {
-      clearSelection()
-      navigate({ to: '/export-status' })
+      clearSelection();
+      navigate({ to: '/export-status' });
     },
-  })
+  });
 
   const handleExport = () => {
-    const email = userEmail || prompt('Enter your email address:')
+    const email = userEmail || prompt('Enter your email address:');
     if (email) {
-      exportMutation.mutate(email)
+      exportMutation.mutate(email);
     }
-  }
+  };
 
   const handleClear = () => {
-    clearSelection()
-  }
+    clearSelection();
+  };
 
-  if (selectedFileIds.length === 0 && !hasPending) {
-    return null
+  if (selectedFiles.length === 0 && !hasPending) {
+    return null;
   }
 
   return (
@@ -64,7 +65,7 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">
-              {selectedFileIds.length} file{selectedFileIds.length !== 1 ? 's' : ''} selected
+              {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
             </span>
             <span className="text-sm text-muted-foreground">
               Total: <FileSize bytes={totalSize} className="font-medium" />
@@ -115,5 +116,5 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};

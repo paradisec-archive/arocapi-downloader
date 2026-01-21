@@ -1,13 +1,13 @@
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { useItems } from '@/hooks/useItems'
-import { ItemRow } from './ItemRow'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { useItems } from '@/hooks/useItems';
+import { ItemRow } from './ItemRow';
 
 type ItemListProps = {
-  collectionId: string
-}
+  collectionId: string;
+};
 
 export const ItemList = ({ collectionId }: ItemListProps) => {
-  const { data, isLoading, error } = useItems(collectionId, true)
+  const { data, isLoading, error } = useItems(collectionId, true);
 
   if (isLoading) {
     return (
@@ -15,17 +15,19 @@ export const ItemList = ({ collectionId }: ItemListProps) => {
         <LoadingSpinner size="sm" />
         <span className="ml-2 text-sm text-muted-foreground">Loading items...</span>
       </div>
-    )
+    );
   }
 
   if (error) {
-    return <div className="py-4 text-sm text-destructive">Error loading items: {error.message}</div>
+    return (
+      <div className="py-4 text-sm text-destructive">Error loading items: {error.message}</div>
+    );
   }
 
   if (!data?.entities.length) {
     return (
       <div className="py-4 text-sm text-muted-foreground">No items found in this collection.</div>
-    )
+    );
   }
 
   return (
@@ -37,5 +39,5 @@ export const ItemList = ({ collectionId }: ItemListProps) => {
         <ItemRow key={item.id} item={item} />
       ))}
     </div>
-  )
-}
+  );
+};

@@ -1,12 +1,12 @@
-import { formatFileSize } from '@shared/formatters'
+import { formatFileSize } from '@shared/formatters';
 
 type FileSizeProps = {
-  bytes: number
-  className?: string
-}
+  bytes: number;
+  className?: string;
+};
 
-export { formatFileSize }
+export { formatFileSize };
 
 export const FileSize = ({ bytes, className }: FileSizeProps) => {
-  return <span className={className}>{formatFileSize(bytes)}</span>
-}
+  return <span className={className}>{formatFileSize(bytes)}</span>;
+};

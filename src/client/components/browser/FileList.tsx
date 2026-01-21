@@ -1,32 +1,32 @@
-import { useMemo } from 'react'
-import type { RoCrateFile } from '@shared/types/index'
-import { Lock } from 'lucide-react'
-import { FileSize } from '@/components/common/FileSize'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { useFiles } from '@/hooks/useFiles'
-import { useSelectionStore } from '@/store/selectionStore'
-import { FileRow } from './FileRow'
+import type { RoCrateFile } from '@shared/types/index';
+import { Lock } from 'lucide-react';
+import { useMemo } from 'react';
+import { FileSize } from '@/components/common/FileSize';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { useFiles } from '@/hooks/useFiles';
+import { useSelectionStore } from '@/store/selectionStore';
+import { FileRow } from './FileRow';
 
 type FileListProps = {
-  itemId: string
-}
+  itemId: string;
+};
 
 export const FileList = ({ itemId }: FileListProps) => {
-  const { data, isLoading, error } = useFiles(itemId, true)
-  const { isFileIncluded, selectedFiles } = useSelectionStore()
+  const { data, isLoading, error } = useFiles(itemId, true);
+  const { isFileIncluded, selectedFiles } = useSelectionStore();
 
   const { allFiles, includedCount, totalSize, selectedSize, restrictedCount } = useMemo(() => {
     if (!data?.files) {
-      return { allFiles: [], includedCount: 0, totalSize: 0, selectedSize: 0, restrictedCount: 0 }
+      return { allFiles: [], includedCount: 0, totalSize: 0, selectedSize: 0, restrictedCount: 0 };
     }
 
-    const files = data.files as RoCrateFile[]
-    const included = files.filter((file) => isFileIncluded(file) && file.access?.content !== false)
-    const restricted = files.filter((file) => file.access?.content === false)
-    const total = included.reduce((sum: number, file: RoCrateFile) => sum + file.size, 0)
+    const files = data.files as RoCrateFile[];
+    const included = files.filter((file) => isFileIncluded(file) && file.access?.content !== false);
+    const restricted = files.filter((file) => file.access?.content === false);
+    const total = included.reduce((sum: number, file: RoCrateFile) => sum + file.size, 0);
     const selected = included
       .filter((file) => selectedFiles.has(file.id))
-      .reduce((sum: number, file: RoCrateFile) => sum + file.size, 0)
+      .reduce((sum: number, file: RoCrateFile) => sum + file.size, 0);
 
     return {
       allFiles: files,
@@ -34,8 +34,8 @@ export const FileList = ({ itemId }: FileListProps) => {
       totalSize: total,
       selectedSize: selected,
       restrictedCount: restricted.length,
-    }
-  }, [data, isFileIncluded, selectedFiles])
+    };
+  }, [data, isFileIncluded, selectedFiles]);
 
   if (isLoading) {
     return (
@@ -43,15 +43,17 @@ export const FileList = ({ itemId }: FileListProps) => {
         <LoadingSpinner size="sm" />
         <span className="ml-2 text-xs text-muted-foreground">Loading files...</span>
       </div>
-    )
+    );
   }
 
   if (error) {
-    return <div className="py-3 text-xs text-destructive">Error loading files: {error.message}</div>
+    return (
+      <div className="py-3 text-xs text-destructive">Error loading files: {error.message}</div>
+    );
   }
 
   if (!allFiles.length) {
-    return <div className="py-3 text-xs text-muted-foreground">No files in this item.</div>
+    return <div className="py-3 text-xs text-muted-foreground">No files in this item.</div>;
   }
 
   return (
@@ -82,5 +84,5 @@ export const FileList = ({ itemId }: FileListProps) => {
         <FileRow key={file.id} file={file} disabled={!isFileIncluded(file)} />
       ))}
     </div>
-  )
-}
+  );
+};

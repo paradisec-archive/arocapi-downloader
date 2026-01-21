@@ -1,4 +1,4 @@
-import { z } from 'zod/v4'
+import { z } from 'zod/v4';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -10,7 +10,7 @@ const envSchema = z.object({
   OIDC_CLIENT_ID: z.string().min(1),
   OIDC_CLIENT_SECRET: z.string().min(1),
   OIDC_REDIRECT_URI: z.url(),
-  OIDC_SCOPES: z.string().default('openid profile email'),
+  OIDC_SCOPES: z.string().default('public openid profile email'),
 
   SESSION_SECRET: z.string().min(32),
 
@@ -18,20 +18,20 @@ const envSchema = z.object({
   SQS_QUEUE_URL: z.url(),
   S3_BUCKET: z.string().min(1),
   EMAIL_FROM: z.email(),
-})
+});
 
-export type EnvConfig = z.infer<typeof envSchema>
+export type EnvConfig = z.infer<typeof envSchema>;
 
 const parseEnv = (): EnvConfig => {
-  const result = envSchema.safeParse(process.env)
+  const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    console.error('Environment validation failed:')
-    console.error(JSON.stringify(z.treeifyError(result.error), null, 2))
-    process.exit(1)
+    console.error('Environment validation failed:');
+    console.error(JSON.stringify(z.treeifyError(result.error), null, 2));
+    process.exit(1);
   }
 
-  return result.data
-}
+  return result.data;
+};
 
-export const config = parseEnv()
+export const config = parseEnv();

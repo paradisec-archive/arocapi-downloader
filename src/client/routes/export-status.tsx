@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const Route = createFileRoute('/export-status')({
   component: ExportStatusPage,
-})
+});
 
 function ExportStatusPage() {
   return (
@@ -29,5 +29,5 @@ function ExportStatusPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

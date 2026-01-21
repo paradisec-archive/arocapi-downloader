@@ -1,23 +1,25 @@
+import type { EntityRef } from './file.js';
+
 export type EntityType =
   | 'http://pcdm.org/models#Collection'
   | 'http://pcdm.org/models#Object'
-  | 'http://schema.org/MediaObject'
+  | 'http://schema.org/MediaObject';
 
 export type Entity = {
-  id: string
-  name: string
-  description?: string
-  entityType: EntityType
-  memberOf?: string
-  rootCollection?: string
-  licenses?: string[]
-}
+  id: string;
+  name: string;
+  description?: string;
+  entityType: EntityType;
+  memberOf?: EntityRef;
+  rootCollection?: string;
+  licenses?: string[];
+};
 
 export type Collection = Entity & {
-  entityType: 'http://pcdm.org/models#Collection'
-}
+  entityType: 'http://pcdm.org/models#Collection';
+};
 
 export type Item = Entity & {
-  entityType: 'http://pcdm.org/models#Object'
-  memberOf: string
-}
+  entityType: 'http://pcdm.org/models#Object';
+  memberOf: EntityRef;
+};
