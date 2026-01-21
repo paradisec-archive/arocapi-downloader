@@ -27,18 +27,21 @@ let oidcConfig: OidcConfig | null = null;
 let jwks: jose.JWTVerifyGetKey | null = null;
 
 export const getOidcConfig = async (): Promise<OidcConfig> => {
-  if (!oidcConfig) {
-    const discoveryUrl = new URL('.well-known/openid-configuration', config.OIDC_ISSUER);
-    const response = await fetch(discoveryUrl.toString());
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch OIDC discovery: ${response.status}`);
-    }
-
-    oidcConfig = await response.json();
+  if (oidcConfig) {
+    return oidcConfig;
   }
 
-  return oidcConfig!;
+  const discoveryUrl = new URL('.well-known/openid-configuration', config.OIDC_ISSUER);
+  console.log('🪚 discoveryUrl:', JSON.stringify(discoveryUrl, null, 2));
+  const response = await fetch(discoveryUrl.toString());
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch OIDC discovery: ${response.status}`);
+  }
+
+  oidcConfig = (await response.json()) as OidcConfig;
+
+  return oidcConfig;
 };
 
 export const getJwks = async (): Promise<jose.JWTVerifyGetKey> => {

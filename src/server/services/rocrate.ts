@@ -30,7 +30,6 @@ const fetchFromApi = async <T>(endpoint: string, options: FetchOptions = {}): Pr
   if (options.token) {
     headers['Authorization'] = `Bearer ${options.token}`;
   }
-  console.log('🪚 headers:', JSON.stringify(headers, null, 2));
 
   const response = await fetch(url.toString(), { headers });
 
