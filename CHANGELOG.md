@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.0.1...v1.0.2) (2026-01-27)
+
+### Bug Fixes
+
+* tidy README.md ([cdc6823](https://github.com/paradisec-archive/arocapi-downloader/commit/cdc682395f3f91af108fcd353e71444a70f933a3))
+
 ## [1.0.1](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.0.0...v1.0.1) (2026-01-27)
 
 ### Bug Fixes
