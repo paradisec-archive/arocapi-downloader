@@ -1,0 +1,51 @@
+# Dependencies - installed fresh in container
+node_modules/
+
+# Build output - built in container
+dist/
+.vinxi/
+
+# Environment files - secrets passed at runtime
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# GitHub and CI
+.github/
+
+# Claude Code
+.claude/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__/
+coverage/
+
+# Documentation
+*.md
+LICENSE
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript build info
+*.tsbuildinfo
