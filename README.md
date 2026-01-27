@@ -53,7 +53,6 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 
    # AWS
    AWS_REGION=ap-southeast-2
-   SQS_QUEUE_URL=https://sqs.region.amazonaws.com/account/queue
    S3_BUCKET=your-bucket
    EMAIL_FROM=noreply@example.com
    ```
@@ -61,18 +60,7 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 3. **Run development servers:**
 
    ```bash
-   # Run both frontend and backend
    pnpm dev
-
-   # Or run separately
-   pnpm dev:client  # Vite dev server on :5173
-   pnpm dev:server  # Hono server on :3000
-   ```
-
-4. **Run the worker (separate terminal):**
-
-   ```bash
-   pnpm worker
    ```
 
 ## Scripts
@@ -80,13 +68,8 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` | Run frontend + backend concurrently |
-| `pnpm dev:client` | Run Vite dev server |
-| `pnpm dev:server` | Run Hono server with watch |
 | `pnpm build` | Build for production |
 | `pnpm start` | Start production server |
-| `pnpm worker` | Run SQS worker process |
-| `pnpm typecheck` | Run TypeScript checks |
-| `pnpm test` | Run tests |
 
 ## Architecture
 
@@ -165,6 +148,7 @@ Verify your sender email address or domain. Ensure you're out of the SES sandbox
    ```
 
 For production, consider:
+
 - Using a process manager (PM2, systemd)
 - Running the worker in a separate container/instance
 - Setting up health checks on `/health`
