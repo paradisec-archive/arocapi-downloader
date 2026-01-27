@@ -11,15 +11,16 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 
 ## Tech Stack
 
-- **Frontend:** React 19, TanStack Router, TanStack Query, Zustand, Tailwind CSS, shadcn/ui
-- **Backend:** Hono (Node.js)
-- **Infrastructure:** AWS S3, SES, SQS
+- **Frontend:** React 19, TanStack Router, TanStack Query, Tailwind CSS, shadcn/ui
+- **Backend:** TanStack Start (SSR React framework with server functions)
+- **State Management:** Jotai (atomic state management)
+- **Infrastructure:** AWS S3 (zip storage), AWS SES (email)
 
 ## Prerequisites
 
 - Node.js 22+
 - pnpm
-- AWS account with S3, SES, and SQS configured
+- AWS account with S3 and SES configured
 - OIDC provider for authentication
 
 ## Setup
@@ -74,43 +75,37 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 ## Architecture
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Browser   │────▶│ Hono Server │────▶│ RO-Crate API│
-└─────────────┘     └──────┬──────┘     └─────────────┘
-                          │
-                          ▼
-                   ┌─────────────┐
-                   │  AWS SQS    │
-                   └──────┬──────┘
-                          │
-                          ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   AWS SES   │◀────│   Worker    │────▶│   AWS S3    │
-└─────────────┘     └─────────────┘     └─────────────┘
+┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   Browser   │────▶│ TanStack Start  │────▶│ RO-Crate API│
+└─────────────┘     │  (Server Funcs) │     └─────────────┘
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+       ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+       │   AWS SES   │ │   Export    │ │   AWS S3    │
+       │   (email)   │ │  Processor  │ │   (zips)    │
+       └─────────────┘ └─────────────┘ └─────────────┘
 ```
 
 1. User browses collections and selects files in the React frontend
-2. Export request is sent to Hono backend, which queues a job in SQS
-3. Worker polls SQS, downloads files from RO-Crate API, creates zip
-4. Zip is uploaded to S3, presigned URL generated
-5. Email with download link sent via SES
+2. Server functions fetch data from RO-Crate API with user's access token
+3. Export request triggers in-process background job
+4. Processor downloads files, creates zip, uploads to S3
+5. Email with presigned download link sent via SES
 
 ## Project Structure
 
 ```
 src/
-├── client/           # React SPA
-│   ├── routes/       # TanStack Router pages
-│   ├── components/   # UI components
-│   ├── hooks/        # TanStack Query hooks
-│   ├── lib/          # API client, utilities
-│   └── store/        # Zustand state management
-├── server/           # Hono backend
-│   ├── routes/       # API endpoints
-│   └── services/     # RO-Crate client, SQS
-├── worker/           # Background job processor
-│   └── services/     # S3, SES, zip creation
-└── shared/           # Shared types, schemas, utilities
+├── routes/           # TanStack Start file-based routes
+├── components/       # React components (ui/, browser/, layout/, common/)
+├── hooks/            # TanStack Query hooks
+├── lib/              # Utilities
+├── store/            # Jotai state management
+├── server/           # Server-only code (functions/, services/)
+├── shared/           # Shared types/schemas
+└── worker/           # Export job processor (runs in-process)
 ```
 
 ## AWS Setup
@@ -118,10 +113,6 @@ src/
 ### S3 Bucket
 
 Create a bucket for storing zip files. Configure lifecycle rules to auto-delete files after 24-48 hours.
-
-### SQS Queue
-
-Create a standard queue (or FIFO if you need ordering). Set visibility timeout to at least 10 minutes.
 
 ### SES
 
@@ -141,17 +132,12 @@ Verify your sender email address or domain. Ensure you're out of the SES sandbox
    pnpm start
    ```
 
-3. Run the worker as a separate process:
-
-   ```bash
-   pnpm worker
-   ```
+Export jobs run in-process within the server, so no separate worker is needed.
 
 For production, consider:
 
 - Using a process manager (PM2, systemd)
-- Running the worker in a separate container/instance
-- Setting up health checks on `/health`
+- Setting up health checks
 
 ## Docker
 
