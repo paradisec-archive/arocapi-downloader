@@ -1,5 +1,5 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { config } from './config.ts';
+import { config } from '~/server/services/config';
 
 const sesClient = new SESClient({ region: config.AWS_REGION });
 
@@ -10,12 +10,7 @@ type SendDownloadEmailParams = {
   totalSize: string;
 };
 
-export const sendDownloadEmail = async ({
-  to,
-  downloadUrl,
-  fileCount,
-  totalSize,
-}: SendDownloadEmailParams): Promise<void> => {
+export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize }: SendDownloadEmailParams): Promise<void> => {
   const command = new SendEmailCommand({
     Source: config.EMAIL_FROM,
     Destination: {

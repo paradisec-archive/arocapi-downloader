@@ -8,42 +8,61 @@ A web application for browsing RO-Crate collections hierarchically, selecting fi
 
 ## Tech Stack
 
-- **Frontend:** React 19, Shadcn/ui, Tailwind CSS 4, TanStack Query, TanStack Router, Zustand
-- **Backend:** Hono (serves SPA from same server)
+- **Frontend:** React 19, Shadcn/ui, Tailwind CSS 4, TanStack Query, TanStack Router
+- **Backend:** TanStack Start (SSR React framework with server functions)
+- **State Management:** Jotai (atomic state management)
 - **Auth:** Generic OIDC (configurable via env)
-- **Infrastructure:** AWS S3 (zip storage), AWS SES (email), AWS SQS (job queue)
+- **Infrastructure:** AWS S3 (zip storage), AWS SES (email)
 
 ## Project Structure
 
 ```
 src/
-├── client/           # React SPA
-│   ├── routes/       # TanStack Router file-based routes
-│   ├── components/   # React components
-│   │   ├── ui/       # shadcn/ui base components
-│   │   ├── browser/  # Collection/item/file browser
-│   │   ├── layout/   # Header, Footer
-│   │   └── common/   # LoadingSpinner, FileSize
-│   ├── hooks/        # TanStack Query hooks
-│   ├── lib/          # API client, utilities
-│   └── store/        # Zustand stores
-├── server/           # Hono backend
-│   ├── routes/       # API routes (auth, api, export)
-│   └── services/     # RO-Crate client, SQS
-├── worker/           # SQS worker process
-│   └── services/     # S3, SES, zipper, RO-Crate fetcher
-└── shared/           # Shared types, schemas, utilities
+├── routes/                     # TanStack Start file-based routes
+│   ├── __root.tsx             # Root layout with HTML document
+│   ├── index.tsx              # Home/login page
+│   ├── browser.tsx            # Collection browser (protected)
+│   ├── export-status.tsx      # Export confirmation
+│   └── api/                   # HTTP API routes (for OIDC redirects)
+│       └── auth/
+│           ├── login.ts       # GET - redirect to OIDC provider
+│           ├── callback.ts    # GET - handle OIDC callback
+│           └── logout.ts      # GET - clear session, redirect
+├── components/                 # React components
+│   ├── ui/                    # shadcn/ui components
+│   ├── browser/               # Collection/item/file browser
+│   ├── layout/                # Header
+│   └── common/                # LoadingSpinner, FileSize
+├── hooks/                      # TanStack Query hooks
+├── lib/                        # Utilities
+├── store/                      # Jotai stores
+├── server/                     # Server-only code
+│   ├── functions/             # Server functions (createServerFn)
+│   │   ├── auth.ts            # getAuthStatus, getAccessToken
+│   │   ├── collections.ts     # getCollections, getItemsInCollection
+│   │   ├── items.ts           # getItems, getFilesInItem
+│   │   └── export.ts          # submitExport
+│   └── services/              # Server services
+│       ├── config.ts          # Environment config
+│       ├── cookies.ts         # Cookie utilities
+│       ├── oidc.ts            # OIDC client
+│       └── rocrate.ts         # RO-Crate API client
+├── shared/                     # Shared types/schemas
+├── worker/                     # Export job processor
+│   ├── processor.ts           # Job processing logic
+│   └── services/              # S3, SES, zipper, RO-Crate fetcher
+├── router.tsx                  # Router configuration
+└── styles.css                  # Global styles
 ```
 
 ## Development Commands
 
 ```bash
-pnpm dev          # Run frontend + backend concurrently
-pnpm dev:client   # Run Vite dev server only
-pnpm dev:server   # Run Hono server with watch mode
+pnpm dev          # Run TanStack Start dev server
 pnpm build        # Build for production
-pnpm worker       # Run SQS worker process
-pnpm typecheck    # Run TypeScript type checking
+pnpm start        # Start production server
+pnpm lint:types   # Run TypeScript type checking
+pnpm lint:biome   # Run Biome linter
 ```
 
 ## Environment Variables
@@ -54,7 +73,6 @@ Copy `.env.example` to `.env` and configure:
 - `OIDC_*` - OIDC authentication settings
 - `SESSION_SECRET` - Session encryption key (min 32 chars)
 - `AWS_*` - AWS credentials and region
-- `SQS_QUEUE_URL` - SQS queue for export jobs
 - `S3_BUCKET` - S3 bucket for zip files
 - `EMAIL_FROM` - Email sender address
 
@@ -62,31 +80,55 @@ Copy `.env.example` to `.env` and configure:
 
 ### Data Flow
 
-1. Frontend fetches collections via `/api/collections`
-2. User expands collections to load items via `/api/collections/:id/items`
-3. User expands items to load files via `/api/items/:id/files`
-4. Selection state stored in Zustand, filtered by quality preferences
-5. Export submits file IDs to SQS queue
-6. Worker fetches files, creates zip, uploads to S3, emails link
+1. Frontend calls server functions (e.g., `getCollections()`)
+2. Server functions read access token from cookies
+3. Server functions call RO-Crate API services
+4. Components render with TanStack Query caching/loading states
+5. Selection state stored in Jotai atoms, filtered by quality preferences
+6. Export submits file IDs via server function, which runs the processor in background
+7. Processor fetches files, creates zip, uploads to S3, emails link
+
+### Authentication
+
+OIDC authentication uses HTTP redirects via API routes:
+
+- `GET /api/auth/login` - Set state cookie, redirect to OIDC provider
+- `GET /api/auth/callback` - Exchange code, set session cookies, redirect to /browser
+- `GET /api/auth/logout` - Clear cookies, redirect to OIDC logout
+
+Protected routes use `beforeLoad` for server-side auth checks.
 
 ### State Management
 
 - **Server state:** TanStack Query for all API data (collections, items, files)
-- **Client state:** Zustand for selection, expansion, and quality preferences
+- **Client state:** Jotai atoms for selection, expansion, and quality preferences
+
+### Server Functions
+
+Server functions use `createServerFn` with `.inputValidator()` for type-safe RPC:
+
+```typescript
+export const getCollections = createServerFn({ method: 'GET' })
+  .inputValidator(paginationSchema)
+  .handler(async ({ data }) => {
+    const token = getCookie('access_token');
+    return rocrate.getCollections(data.limit ?? 50, data.offset ?? 0, token);
+  });
+```
 
 ### Type Safety
 
 - Shared types in `src/shared/types/`
-- Zod schemas in `src/shared/schemas/` for runtime validation
+- Zod schemas for runtime validation
 - TypeScript strict mode enabled
 
 ## Path Aliases
 
-- `@/*` - `src/client/*`
-- `@shared/*` - `src/shared/*`
+- `~/*` - `src/*`
 
 ## Notes
 
-- The route tree (`src/client/routeTree.gen.ts`) is auto-generated by TanStack Router plugin
-- Authentication is currently stubbed - implement OIDC callback handling in production
-- SQS worker runs as a separate process (`pnpm worker`)
+- The route tree (`src/routeTree.gen.ts`) is auto-generated by TanStack Router plugin
+- Export jobs run in the background within the server process (no separate worker)
+- Build output goes to `dist/` directory
+- Cookie handling uses `@tanstack/react-start/server` utilities

@@ -1,5 +1,8 @@
 import { z } from 'zod/v4';
 
+// NOTE: Configuration is loaded at startup time.
+// In TanStack Start context, this runs on the server side.
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(7000),
@@ -15,7 +18,6 @@ const envSchema = z.object({
   SESSION_SECRET: z.string().min(32),
 
   AWS_REGION: z.string().default('ap-southeast-2'),
-  SQS_QUEUE_URL: z.url(),
   S3_BUCKET: z.string().min(1),
   EMAIL_FROM: z.email(),
 });

@@ -1,11 +1,11 @@
-import type { QualityTier, RoCrateFile } from './file.js';
+import type { QualityTier, RoCrateFile } from './file';
 
 export type QualityPreferences = {
   audio: QualityTier;
   video: QualityTier;
 };
 
-export type ExportFileInfo = Pick<RoCrateFile, 'id' | 'name' | 'size' | 'memberOf'>;
+export type ExportFileInfo = Pick<RoCrateFile, 'id' | 'filename' | 'size' | 'memberOf'>;
 
 export type ExportRequest = {
   files: ExportFileInfo[];

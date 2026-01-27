@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { config } from './config.ts';
+import { config } from './config';
 
 type OidcConfig = {
   authorization_endpoint: string;
@@ -17,10 +17,10 @@ type TokenResponse = {
   expires_in?: number;
 };
 
-type UserInfo = {
+export type UserInfo = {
   sub: string;
-  email?: string;
-  name?: string;
+  email?: string | undefined;
+  name?: string | undefined;
 };
 
 let oidcConfig: OidcConfig | null = null;
@@ -32,7 +32,6 @@ export const getOidcConfig = async (): Promise<OidcConfig> => {
   }
 
   const discoveryUrl = new URL('.well-known/openid-configuration', config.OIDC_ISSUER);
-  console.log('🪚 discoveryUrl:', JSON.stringify(discoveryUrl, null, 2));
   const response = await fetch(discoveryUrl.toString());
 
   if (!response.ok) {
@@ -103,8 +102,8 @@ export const verifyIdToken = async (idToken: string): Promise<UserInfo> => {
 
   return {
     sub: payload.sub as string,
-    email: payload.email as string | undefined,
-    name: payload.name as string | undefined,
+    email: payload['email'] as string | undefined,
+    name: payload['name'] as string | undefined,
   };
 };
 
@@ -143,10 +142,11 @@ export const getLogoutUrl = async (idTokenHint?: string): Promise<string> => {
     url.searchParams.set('id_token_hint', idTokenHint);
   }
 
-  url.searchParams.set(
-    'post_logout_redirect_uri',
-    config.OIDC_REDIRECT_URI.replace('/auth/callback', ''),
-  );
+  // Build post-logout redirect URI from the configured redirect URI
+  const redirectUrl = new URL(config.OIDC_REDIRECT_URI);
+  redirectUrl.pathname = '/';
+  redirectUrl.search = '';
+  url.searchParams.set('post_logout_redirect_uri', redirectUrl.toString());
 
   return url.toString();
 };

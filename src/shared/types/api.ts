@@ -17,3 +17,6 @@ export type ApiError = {
   message: string;
   details?: Record<string, unknown>;
 };
+
+// Type alias for backwards compatibility
+export type PaginatedResponse<T> = PaginatedEntitiesResponse<T>;

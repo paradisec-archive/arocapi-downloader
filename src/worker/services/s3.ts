@@ -2,8 +2,8 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { PRESIGNED_URL_EXPIRY_SECONDS } from '../../shared/constants.ts';
-import { config } from './config.ts';
+import { config } from '~/server/services/config';
+import { PRESIGNED_URL_EXPIRY_SECONDS } from '~/shared/constants';
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 

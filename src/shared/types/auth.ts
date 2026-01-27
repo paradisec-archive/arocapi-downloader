@@ -1,10 +1,10 @@
 export type AuthUser = {
   sub: string;
-  email?: string;
-  name?: string;
+  email?: string | undefined;
+  name?: string | undefined;
 };
 
 export type AuthStatus = {
   authenticated: boolean;
-  user?: AuthUser;
+  user?: AuthUser | undefined;
 };

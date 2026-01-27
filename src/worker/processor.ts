@@ -1,18 +1,31 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { formatFileSize } from '../shared/formatters.ts';
-import type { ExportFileInfo, ExportJobMessage } from '../shared/types/index.ts';
-import { sendDownloadEmail } from './services/email.ts';
-import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate.ts';
-import { generatePresignedUrl, uploadToS3 } from './services/s3.ts';
-import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper.ts';
+import { formatFileSize } from '~/shared/formatters';
+import type { ExportFileInfo, ExportJobMessage } from '~/shared/types/index';
+import { sendDownloadEmail } from './services/email';
+import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate';
+import { generatePresignedUrl, uploadToS3 } from './services/s3';
+import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper';
 
 type FilesByItem = Map<string, { itemId: string; collectionId: string; files: ExportFileInfo[] }>;
 
-const groupFilesByItem = async (
-  files: ExportFileInfo[],
-  accessToken?: string,
-): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
+// Extract a clean directory path from an entity ID (URL)
+// e.g. "https://admin-catalog.nabu-stage.paradisec.org.au/repository/JFTEST/001"
+// becomes "admin-catalog.nabu-stage.paradisec.org.au/JFTEST/001"
+const extractPathFromId = (entityId: string): string => {
+  try {
+    const url = new URL(entityId);
+    // Remove /repository/ prefix from path if present
+    const cleanPath = url.pathname.replace(/^\/repository\//, '/');
+
+    return `${url.hostname}${cleanPath}`;
+  } catch {
+    // If not a valid URL, return as-is but sanitise for filesystem
+    return entityId.replace(/[<>:"|?*]/g, '_');
+  }
+};
+
+const groupFilesByItem = async (files: ExportFileInfo[], accessToken?: string): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
   const filesByItem: FilesByItem = new Map();
   const itemCache = new Map<string, string>(); // itemId -> collectionId
   let totalSize = 0;
@@ -57,14 +70,14 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
 
     // Process each item group
     let downloadedCount = 0;
-    for (const [, { itemId, collectionId, files: itemFiles }] of filesByItem) {
-      // Create directory structure: collection/item/
-      const itemDir = join(workDir, collectionId, itemId);
+    for (const [, { itemId, files: itemFiles }] of filesByItem) {
+      // Create directory structure using clean path from item ID
+      // e.g. "https://example.com/repository/COLL/001" -> "example.com/COLL/001"
+      const itemPath = extractPathFromId(itemId);
+      const itemDir = join(workDir, itemPath);
       await mkdir(itemDir, { recursive: true });
 
-      console.log(
-        `Processing item ${itemId} in collection ${collectionId}: ${itemFiles.length} files`,
-      );
+      console.log(`Processing item ${itemId}: ${itemFiles.length} files -> ${itemPath}`);
 
       // Download RO-Crate metadata for the item
       console.log(`Downloading RO-Crate metadata for item: ${itemId}`);
@@ -73,10 +86,10 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
       // Download each file into the item directory
       for (const file of itemFiles) {
         downloadedCount++;
-        console.log(`Downloading file ${downloadedCount}/${files.length}: ${file.name}`);
+        console.log(`Downloading file ${downloadedCount}/${files.length}: ${file.filename}`);
 
         try {
-          await downloadFile(file.id, itemDir, file.name, accessToken);
+          await downloadFile(file.id, itemDir, file.filename, accessToken);
         } catch (error) {
           console.error(`Failed to download file ${file.id}:`, error);
           throw error;

@@ -1,11 +1,11 @@
-import type { Entity, PaginatedEntitiesResponse, RoCrateFile } from '../../shared/types/index.ts';
-import { config } from './config.ts';
+import type { Entity, PaginatedEntitiesResponse, PaginatedFilesResponse, RoCrateFile, SearchRequest, SearchResponse } from '~/shared/types/index';
+import { config } from './config';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 
 type FetchOptions = {
-  params?: Record<string, string | number | undefined>;
-  token?: string;
+  params?: Record<string, string | number | undefined> | undefined;
+  token?: string | undefined;
 };
 
 const fetchFromApi = async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
@@ -13,7 +13,6 @@ const fetchFromApi = async <T>(endpoint: string, options: FetchOptions = {}): Pr
   const basePath = base.pathname.endsWith('/') ? base.pathname.slice(0, -1) : base.pathname;
   const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = new URL(`${basePath}${endpointPath}`, base.origin);
-  console.log('🪚 url:', JSON.stringify(url, null, 2));
 
   if (options.params) {
     for (const [key, value] of Object.entries(options.params)) {
@@ -34,9 +33,7 @@ const fetchFromApi = async <T>(endpoint: string, options: FetchOptions = {}): Pr
   const response = await fetch(url.toString(), { headers });
 
   if (!response.ok) {
-    throw new Error(
-      `RO-Crate API error: ${response.status} ${response.statusText} ${await response.text()}`,
-    );
+    throw new Error(`RO-Crate API error: ${response.status} ${response.statusText} ${await response.text()}`);
   }
 
   const data = response.json() as Promise<T>;
@@ -44,11 +41,43 @@ const fetchFromApi = async <T>(endpoint: string, options: FetchOptions = {}): Pr
   return data;
 };
 
-export const getCollections = async (
-  limit = 50,
-  offset = 0,
-  token?: string,
-): Promise<PaginatedEntitiesResponse<Entity>> => {
+type PostOptions = {
+  body: Record<string, unknown>;
+  token?: string | undefined;
+};
+
+const postToApi = async <T>(endpoint: string, options: PostOptions): Promise<T> => {
+  console.log('🪚 options:', JSON.stringify(options, null, 2));
+  const base = new URL(baseUrl);
+  const basePath = base.pathname.endsWith('/') ? base.pathname.slice(0, -1) : base.pathname;
+  const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = new URL(`${basePath}${endpointPath}`, base.origin);
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (options.token) {
+    headers['Authorization'] = `Bearer ${options.token}`;
+  }
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(options.body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`RO-Crate API error: ${response.status} ${response.statusText} ${await response.text()}`);
+  }
+
+  const data = response.json() as Promise<T>;
+  console.log('🪚 data:', JSON.stringify(data, null, 2));
+
+  return data;
+};
+
+export const getCollections = async (limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {
   return fetchFromApi<PaginatedEntitiesResponse<Entity>>('/entities', {
     params: {
       entityType: 'http://pcdm.org/models#Collection',
@@ -63,12 +92,7 @@ export const getCollection = async (id: string, token?: string): Promise<Entity>
   return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });
 };
 
-export const getItemsInCollection = async (
-  collectionId: string,
-  limit = 50,
-  offset = 0,
-  token?: string,
-): Promise<PaginatedEntitiesResponse<Entity>> => {
+export const getItemsInCollection = async (collectionId: string, limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {
   return fetchFromApi<PaginatedEntitiesResponse<Entity>>('/entities', {
     params: {
       memberOf: collectionId,
@@ -84,13 +108,8 @@ export const getItem = async (id: string, token?: string): Promise<Entity> => {
   return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });
 };
 
-export const getFilesInItem = async (
-  itemId: string,
-  limit = 100,
-  offset = 0,
-  token?: string,
-): Promise<PaginatedEntitiesResponse<RoCrateFile>> => {
-  return fetchFromApi<PaginatedEntitiesResponse<RoCrateFile>>('/files', {
+export const getFilesInItem = async (itemId: string, limit = 100, offset = 0, token?: string): Promise<PaginatedFilesResponse<RoCrateFile>> => {
+  return fetchFromApi<PaginatedFilesResponse<RoCrateFile>>('/files', {
     params: {
       memberOf: itemId,
       limit,
@@ -118,4 +137,11 @@ export const downloadFile = async (id: string, token?: string): Promise<Response
   }
 
   return fetch(url.toString(), { headers });
+};
+
+export const search = async (request: SearchRequest, token?: string): Promise<SearchResponse> => {
+  return postToApi<SearchResponse>('/search', {
+    body: request as unknown as Record<string, unknown>,
+    token,
+  });
 };

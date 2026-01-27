@@ -3,8 +3,8 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import type { Entity, RoCrateFile } from '../../shared/types/index.ts';
-import { config } from './config.ts';
+import { config } from '~/server/services/config';
+import type { Entity, RoCrateFile } from '~/shared/types/index';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 
@@ -29,7 +29,6 @@ const buildHeaders = (token?: string, accept = 'application/json'): Record<strin
 export const getFileMetadata = async (fileId: string, token?: string): Promise<RoCrateFile> => {
   const url = buildUrl(`/entity/${encodeURIComponent(fileId)}`);
 
-  console.log(buildHeaders(token, '*/*'));
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, 'application/json'),
   });
@@ -41,17 +40,9 @@ export const getFileMetadata = async (fileId: string, token?: string): Promise<R
   return response.json() as Promise<RoCrateFile>;
 };
 
-export const downloadFile = async (
-  fileId: string,
-  destDir: string,
-  filename: string,
-  token?: string,
-): Promise<string> => {
+export const downloadFile = async (fileId: string, destDir: string, filename: string, token?: string): Promise<string> => {
   const url = buildUrl(`/file/${encodeURIComponent(fileId)}`);
-  console.log('🪚 ♌');
-  console.log('🪚 url:', JSON.stringify(url, null, 2));
 
-  console.log(buildHeaders(token, '*/*'));
   const response = await fetch(url.toString(), {
     headers: buildHeaders(token, '*/*'),
   });
@@ -64,26 +55,18 @@ export const downloadFile = async (
     throw new Error('Response body is null');
   }
 
-  console.log('🪚 ♎');
-  console.log('🪚 filename:', JSON.stringify(filename, null, 2));
-  console.log('🪚 destDir:', JSON.stringify(destDir, null, 2));
   const destPath = join(destDir, filename);
   const fileStream = createWriteStream(destPath);
 
+  // @ts-expect-error - Type mismatch between global ReadableStream and Node's stream/web ReadableStream
   await pipeline(Readable.fromWeb(response.body), fileStream);
 
   return destPath;
 };
 
-export const downloadFileWithMetadata = async (
-  fileId: string,
-  destDir: string,
-  token?: string,
-): Promise<{ path: string; metadata: RoCrateFile }> => {
+export const downloadFileWithMetadata = async (fileId: string, destDir: string, token?: string): Promise<{ path: string; metadata: RoCrateFile }> => {
   const metadata = await getFileMetadata(fileId, token);
-  console.log('🪚 🟩');
-  console.log('🪚 metadata:', JSON.stringify(metadata, null, 2));
-  const path = await downloadFile(fileId, destDir, metadata.name, token);
+  const path = await downloadFile(fileId, destDir, metadata.filename, token);
 
   return { path, metadata };
 };
@@ -116,11 +99,7 @@ export const getEntityRoCrate = async (entityId: string, token?: string): Promis
   return response.json();
 };
 
-export const saveRoCrateMetadata = async (
-  entityId: string,
-  destDir: string,
-  token?: string,
-): Promise<string> => {
+export const saveRoCrateMetadata = async (entityId: string, destDir: string, token?: string): Promise<string> => {
   const rocrate = await getEntityRoCrate(entityId, token);
   const destPath = join(destDir, 'ro-crate-metadata.json');
   await writeFile(destPath, JSON.stringify(rocrate, null, 2));

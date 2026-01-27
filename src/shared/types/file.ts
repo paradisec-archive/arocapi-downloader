@@ -1,10 +1,4 @@
-export type MediaType =
-  | 'audio/wav'
-  | 'audio/mpeg'
-  | 'video/x-matroska'
-  | 'video/x-msvideo'
-  | 'video/mxf'
-  | string;
+export type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video/x-msvideo' | 'video/mxf' | string;
 
 export type QualityTier = 'archival' | 'presentation';
 
@@ -22,6 +16,7 @@ export type EntityRef = {
 export type RoCrateFile = {
   id: string;
   name: string;
+  filename: string;
   mediaType: MediaType;
   size: number;
   memberOf: EntityRef;
