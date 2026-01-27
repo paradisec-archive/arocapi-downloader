@@ -153,6 +153,114 @@ For production, consider:
 - Running the worker in a separate container/instance
 - Setting up health checks on `/health`
 
+## Docker
+
+The application is published as a Docker image to GitHub Container Registry.
+
+### Image Details
+
+- **Registry:** `ghcr.io/paradisec/arocapi-downloader`
+- **Tags:** Version numbers (e.g., `1.0.1`) and `latest`
+- **Platforms:** `linux/amd64`, `linux/arm64`
+- **Port:** `7000`
+
+### Environment Variables
+
+#### Required
+
+| Variable | Description | Format |
+|----------|-------------|--------|
+| `ROCRATE_API_BASE_URL` | RO-Crate API endpoint | URL |
+| `OIDC_ISSUER` | OIDC provider issuer URL | URL |
+| `OIDC_CLIENT_ID` | OIDC client identifier | String |
+| `OIDC_CLIENT_SECRET` | OIDC client secret | String |
+| `OIDC_REDIRECT_URI` | OIDC callback URL | URL |
+| `SESSION_SECRET` | Session encryption key | String (min 32 chars) |
+| `S3_BUCKET` | S3 bucket for zip files | String |
+| `EMAIL_FROM` | Sender email address | Email |
+
+#### Optional
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NODE_ENV` | `development` | Environment mode (`development`, `production`, `test`) |
+| `PORT` | `7000` | Server port |
+| `OIDC_SCOPES` | `public openid profile email` | OIDC scopes to request |
+| `AWS_REGION` | `ap-southeast-2` | AWS region |
+
+#### AWS Credentials
+
+AWS credentials can be provided via environment variables or IAM role:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+When running on AWS infrastructure (EC2, ECS, Lambda), prefer using IAM roles instead of explicit credentials.
+
+### Usage Examples
+
+**Using an environment file:**
+
+```bash
+docker run -d \
+  --name arocapi-downloader \
+  -p 7000:7000 \
+  --env-file .env \
+  ghcr.io/paradisec/arocapi-downloader:latest
+```
+
+**With inline environment variables:**
+
+```bash
+docker run -d \
+  --name arocapi-downloader \
+  -p 7000:7000 \
+  -e ROCRATE_API_BASE_URL=https://api.example.com \
+  -e OIDC_ISSUER=https://idp.example.com \
+  -e OIDC_CLIENT_ID=your-client-id \
+  -e OIDC_CLIENT_SECRET=your-client-secret \
+  -e OIDC_REDIRECT_URI=https://app.example.com/api/auth/callback \
+  -e SESSION_SECRET=your-secret-at-least-32-characters \
+  -e S3_BUCKET=your-bucket \
+  -e EMAIL_FROM=noreply@example.com \
+  -e AWS_REGION=ap-southeast-2 \
+  -e AWS_ACCESS_KEY_ID=your-access-key \
+  -e AWS_SECRET_ACCESS_KEY=your-secret-key \
+  ghcr.io/paradisec/arocapi-downloader:latest
+```
+
+**Docker Compose:**
+
+```yaml
+services:
+  arocapi-downloader:
+    image: ghcr.io/paradisec/arocapi-downloader:latest
+    ports:
+      - '7000:7000'
+    environment:
+      - NODE_ENV=production
+      - ROCRATE_API_BASE_URL=https://api.example.com
+      - OIDC_ISSUER=https://idp.example.com
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET}
+      - OIDC_REDIRECT_URI=https://app.example.com/api/auth/callback
+      - SESSION_SECRET=${SESSION_SECRET}
+      - S3_BUCKET=${S3_BUCKET}
+      - EMAIL_FROM=noreply@example.com
+      - AWS_REGION=ap-southeast-2
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    restart: unless-stopped
+```
+
+### Health Check
+
+The container includes a built-in health check. The application responds on port `7000` at the root path (`/`). You can verify the container is running with:
+
+```bash
+curl http://localhost:7000/
+```
+
 ## Licence
 
 ISC
