@@ -33,6 +33,9 @@ jobs:
       - name: Run linting
         run: pnpm lint:biome
 
+      - name: Run knip
+        run: pnpm lint:knip
+
       #- name: Run tests
       #  run: pnpm test --run
 

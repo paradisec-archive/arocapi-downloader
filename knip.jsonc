@@ -5,5 +5,9 @@
   "ignore": [
     // shadcn/ui component library
     "src/components/ui/**"
+  ],
+  "ignoreDependencies": [
+    // Used by semantic-release as preset
+    "conventional-changelog-conventionalcommits"
   ]
 }
