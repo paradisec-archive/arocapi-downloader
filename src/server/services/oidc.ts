@@ -26,7 +26,7 @@ export type UserInfo = {
 let oidcConfig: OidcConfig | null = null;
 let jwks: jose.JWTVerifyGetKey | null = null;
 
-export const getOidcConfig = async (): Promise<OidcConfig> => {
+const getOidcConfig = async (): Promise<OidcConfig> => {
   if (oidcConfig) {
     return oidcConfig;
   }
@@ -43,7 +43,7 @@ export const getOidcConfig = async (): Promise<OidcConfig> => {
   return oidcConfig;
 };
 
-export const getJwks = async (): Promise<jose.JWTVerifyGetKey> => {
+const getJwks = async (): Promise<jose.JWTVerifyGetKey> => {
   if (!jwks) {
     const oidc = await getOidcConfig();
     jwks = jose.createRemoteJWKSet(new URL(oidc.jwks_uri));

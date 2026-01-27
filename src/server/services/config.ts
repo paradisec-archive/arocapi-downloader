@@ -22,7 +22,7 @@ const envSchema = z.object({
   EMAIL_FROM: z.email(),
 });
 
-export type EnvConfig = z.infer<typeof envSchema>;
+type EnvConfig = z.infer<typeof envSchema>;
 
 const parseEnv = (): EnvConfig => {
   const result = envSchema.safeParse(process.env);

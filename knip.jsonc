@@ -3,7 +3,7 @@
   "tags": ["-lintignore"],
   "entry": ["src/router.tsx"],
   "ignore": [
-    // Generated
-    "src/routeTree.gen.ts"
+    // shadcn/ui component library
+    "src/components/ui/**"
   ]
 }

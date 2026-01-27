@@ -5,8 +5,6 @@ type FileSizeProps = {
   className?: string;
 };
 
-export { formatFileSize };
-
 export const FileSize = ({ bytes, className }: FileSizeProps) => {
   return <span className={className}>{formatFileSize(bytes)}</span>;
 };

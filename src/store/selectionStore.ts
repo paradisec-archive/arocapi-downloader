@@ -2,7 +2,7 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
 import type { Entity, QualityTier, RoCrateFile } from '~/shared/types/index';
 
-export type SelectionStateType = 'full' | 'partial' | 'none';
+type SelectionStateType = 'full' | 'partial' | 'none';
 
 // Helper function for quality filtering
 const isFileIncludedWithQuality = (file: RoCrateFile, audioQuality: QualityTier, videoQuality: QualityTier): boolean => {
@@ -33,31 +33,31 @@ const isFileIncludedWithQuality = (file: RoCrateFile, audioQuality: QualityTier,
 };
 
 // Primitive atoms
-export const selectedCollectionsAtom = atom(new Set<string>());
-export const selectedItemsAtom = atom(new Set<string>());
-export const selectedFilesAtom = atom(new Set<string>());
+const selectedCollectionsAtom = atom(new Set<string>());
+const selectedItemsAtom = atom(new Set<string>());
+const selectedFilesAtom = atom(new Set<string>());
 
-export const expandedCollectionsAtom = atom(new Set<string>());
-export const expandedItemsAtom = atom(new Set<string>());
+const expandedCollectionsAtom = atom(new Set<string>());
+const expandedItemsAtom = atom(new Set<string>());
 
-export const pendingCollectionsAtom = atom(new Set<string>());
-export const pendingItemsAtom = atom(new Set<string>());
+const pendingCollectionsAtom = atom(new Set<string>());
+const pendingItemsAtom = atom(new Set<string>());
 
-export const collectionItemsAtom = atom(new Map<string, string[]>());
-export const itemFilesAtom = atom(new Map<string, string[]>());
+const collectionItemsAtom = atom(new Map<string, string[]>());
+const itemFilesAtom = atom(new Map<string, string[]>());
 
-export const audioQualityAtom = atom<QualityTier>('presentation');
-export const videoQualityAtom = atom<QualityTier>('presentation');
+const audioQualityAtom = atom<QualityTier>('presentation');
+const videoQualityAtom = atom<QualityTier>('presentation');
 
-export const fileMetadataAtom = atom(new Map<string, RoCrateFile>());
+const fileMetadataAtom = atom(new Map<string, RoCrateFile>());
 
 // Derived atoms
-export const pendingInfoAtom = atom((get) => ({
+const pendingInfoAtom = atom((get) => ({
   pendingCollections: get(pendingCollectionsAtom).size,
   pendingItems: get(pendingItemsAtom).size,
 }));
 
-export const selectedFilesListAtom = atom((get) => {
+const selectedFilesListAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
   const audioQuality = get(audioQualityAtom);
@@ -74,7 +74,7 @@ export const selectedFilesListAtom = atom((get) => {
   return includedFiles;
 });
 
-export const selectedFileIdsAtom = atom((get) => {
+const selectedFileIdsAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
   const audioQuality = get(audioQualityAtom);
@@ -91,7 +91,7 @@ export const selectedFileIdsAtom = atom((get) => {
   return includedFiles;
 });
 
-export const totalSelectedSizeAtom = atom((get) => {
+const totalSelectedSizeAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
   const audioQuality = get(audioQualityAtom);
@@ -109,7 +109,7 @@ export const totalSelectedSizeAtom = atom((get) => {
 });
 
 // Action atoms
-export const selectCollectionAtom = atom(null, (get, set, collectionId: string) => {
+const selectCollectionAtom = atom(null, (get, set, collectionId: string) => {
   const selectedCollections = get(selectedCollectionsAtom);
   const expandedCollections = get(expandedCollectionsAtom);
   const pendingCollections = get(pendingCollectionsAtom);
@@ -165,7 +165,7 @@ export const selectCollectionAtom = atom(null, (get, set, collectionId: string) 
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const deselectCollectionAtom = atom(null, (get, set, collectionId: string) => {
+const deselectCollectionAtom = atom(null, (get, set, collectionId: string) => {
   const selectedCollections = get(selectedCollectionsAtom);
   const pendingCollections = get(pendingCollectionsAtom);
   const selectedItems = get(selectedItemsAtom);
@@ -201,7 +201,7 @@ export const deselectCollectionAtom = atom(null, (get, set, collectionId: string
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const selectItemAtom = atom(null, (get, set, itemId: string) => {
+const selectItemAtom = atom(null, (get, set, itemId: string) => {
   const selectedItems = get(selectedItemsAtom);
   const expandedItems = get(expandedItemsAtom);
   const pendingItems = get(pendingItemsAtom);
@@ -237,7 +237,7 @@ export const selectItemAtom = atom(null, (get, set, itemId: string) => {
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const deselectItemAtom = atom(null, (get, set, itemId: string) => {
+const deselectItemAtom = atom(null, (get, set, itemId: string) => {
   const selectedItems = get(selectedItemsAtom);
   const pendingItems = get(pendingItemsAtom);
   const selectedFiles = get(selectedFilesAtom);
@@ -260,7 +260,7 @@ export const deselectItemAtom = atom(null, (get, set, itemId: string) => {
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const toggleFileSelectionAtom = atom(null, (get, set, fileId: string) => {
+const toggleFileSelectionAtom = atom(null, (get, set, fileId: string) => {
   const selectedFiles = get(selectedFilesAtom);
   const newSet = new Set(selectedFiles);
 
@@ -273,7 +273,7 @@ export const toggleFileSelectionAtom = atom(null, (get, set, fileId: string) => 
   set(selectedFilesAtom, newSet);
 });
 
-export const registerItemsForCollectionAtom = atom(null, (get, set, { collectionId, items }: { collectionId: string; items: Entity[] }) => {
+const registerItemsForCollectionAtom = atom(null, (get, set, { collectionId, items }: { collectionId: string; items: Entity[] }) => {
   const collectionItems = get(collectionItemsAtom);
   const selectedCollections = get(selectedCollectionsAtom);
   const selectedItems = get(selectedItemsAtom);
@@ -325,7 +325,7 @@ export const registerItemsForCollectionAtom = atom(null, (get, set, { collection
   }
 });
 
-export const registerFilesForItemAtom = atom(null, (get, set, { itemId, files }: { itemId: string; files: RoCrateFile[] }) => {
+const registerFilesForItemAtom = atom(null, (get, set, { itemId, files }: { itemId: string; files: RoCrateFile[] }) => {
   const itemFiles = get(itemFilesAtom);
   const selectedItems = get(selectedItemsAtom);
   const selectedFiles = get(selectedFilesAtom);
@@ -355,7 +355,7 @@ export const registerFilesForItemAtom = atom(null, (get, set, { itemId, files }:
   }
 });
 
-export const toggleCollectionExpandAtom = atom(null, (get, set, collectionId: string) => {
+const toggleCollectionExpandAtom = atom(null, (get, set, collectionId: string) => {
   const expandedCollections = get(expandedCollectionsAtom);
   const newSet = new Set(expandedCollections);
 
@@ -368,7 +368,7 @@ export const toggleCollectionExpandAtom = atom(null, (get, set, collectionId: st
   set(expandedCollectionsAtom, newSet);
 });
 
-export const toggleItemExpandAtom = atom(null, (get, set, itemId: string) => {
+const toggleItemExpandAtom = atom(null, (get, set, itemId: string) => {
   const expandedItems = get(expandedItemsAtom);
   const newSet = new Set(expandedItems);
 
@@ -381,7 +381,7 @@ export const toggleItemExpandAtom = atom(null, (get, set, itemId: string) => {
   set(expandedItemsAtom, newSet);
 });
 
-export const setAudioQualityAtom = atom(null, (get, set, quality: QualityTier) => {
+const setAudioQualityAtom = atom(null, (get, set, quality: QualityTier) => {
   const selectedItems = get(selectedItemsAtom);
   const itemFiles = get(itemFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
@@ -403,7 +403,7 @@ export const setAudioQualityAtom = atom(null, (get, set, quality: QualityTier) =
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const setVideoQualityAtom = atom(null, (get, set, quality: QualityTier) => {
+const setVideoQualityAtom = atom(null, (get, set, quality: QualityTier) => {
   const selectedItems = get(selectedItemsAtom);
   const itemFiles = get(itemFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
@@ -425,7 +425,7 @@ export const setVideoQualityAtom = atom(null, (get, set, quality: QualityTier) =
   set(selectedFilesAtom, newSelectedFiles);
 });
 
-export const addFileMetadataAtom = atom(null, (get, set, files: RoCrateFile[]) => {
+const addFileMetadataAtom = atom(null, (get, set, files: RoCrateFile[]) => {
   const fileMetadata = get(fileMetadataAtom);
   const newMap = new Map(fileMetadata);
 
@@ -436,7 +436,7 @@ export const addFileMetadataAtom = atom(null, (get, set, files: RoCrateFile[]) =
   set(fileMetadataAtom, newMap);
 });
 
-export const clearSelectionAtom = atom(null, (_get, set) => {
+const clearSelectionAtom = atom(null, (_get, set) => {
   set(selectedCollectionsAtom, new Set());
   set(selectedItemsAtom, new Set());
   set(selectedFilesAtom, new Set());
@@ -445,7 +445,7 @@ export const clearSelectionAtom = atom(null, (_get, set) => {
 });
 
 // Helper functions to compute selection states
-export const getCollectionSelectionState = (
+const getCollectionSelectionState = (
   collectionId: string,
   selectedCollections: Set<string>,
   collectionItems: Map<string, string[]>,
@@ -492,7 +492,7 @@ export const getCollectionSelectionState = (
   return allItemsFullySelected ? 'full' : 'partial';
 };
 
-export const getItemSelectionState = (
+const getItemSelectionState = (
   itemId: string,
   selectedItems: Set<string>,
   pendingItems: Set<string>,
@@ -528,8 +528,8 @@ export const getItemSelectionState = (
   return allFilesSelected ? 'full' : 'partial';
 };
 
-// Export isFileIncluded helper for components
-export const isFileIncluded = (file: RoCrateFile, audioQuality: QualityTier, videoQuality: QualityTier): boolean => {
+// Helper for components
+const isFileIncluded = (file: RoCrateFile, audioQuality: QualityTier, videoQuality: QualityTier): boolean => {
   return isFileIncludedWithQuality(file, audioQuality, videoQuality);
 };
 

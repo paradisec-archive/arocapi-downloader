@@ -27,7 +27,3 @@ export const getAuthStatus = createServerFn({ method: 'GET' }).handler(async ():
     return { authenticated: false };
   }
 });
-
-export const getAccessToken = createServerFn({ method: 'GET' }).handler(async (): Promise<string | null> => {
-  return getCookie('access_token') ?? null;
-});

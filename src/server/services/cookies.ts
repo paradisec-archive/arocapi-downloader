@@ -1,4 +1,4 @@
-import { getRequest, setResponseHeader } from '@tanstack/react-start/server';
+import { getRequest } from '@tanstack/react-start/server';
 
 type CookieOptions = {
   httpOnly?: boolean | undefined;
@@ -12,7 +12,7 @@ type CookieOptions = {
 /**
  * Parse cookies from a Cookie header string
  */
-export const parseCookies = (cookieHeader: string): Record<string, string> => {
+const parseCookies = (cookieHeader: string): Record<string, string> => {
   const cookies: Record<string, string> = {};
 
   cookieHeader.split(';').forEach((cookie) => {
@@ -72,20 +72,6 @@ export const getCookieFromRequest = (request: Request, name: string): string | u
   const cookies = parseCookies(cookieHeader);
 
   return cookies[name];
-};
-
-/**
- * Set a cookie in the response (for use in server functions)
- */
-export const setCookie = (name: string, value: string, options: CookieOptions = {}): void => {
-  setResponseHeader('Set-Cookie', serializeCookie(name, value, options));
-};
-
-/**
- * Delete a cookie by setting it to expire immediately (for use in server functions)
- */
-export const deleteCookie = (name: string, options: Pick<CookieOptions, 'path' | 'domain'> = {}): void => {
-  setCookie(name, '', { ...options, maxAge: 0 });
 };
 
 export type { CookieOptions };

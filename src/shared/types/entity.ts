@@ -11,12 +11,3 @@ export type Entity = {
   rootCollection?: string | undefined;
   licenses?: string[] | undefined;
 };
-
-export type Collection = Entity & {
-  entityType: 'http://pcdm.org/models#Collection';
-};
-
-export type Item = Entity & {
-  entityType: 'http://pcdm.org/models#Object';
-  memberOf: EntityRef;
-};

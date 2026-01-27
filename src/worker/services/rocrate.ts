@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { config } from '~/server/services/config';
-import type { Entity, RoCrateFile } from '~/shared/types/index';
+import type { Entity } from '~/shared/types/index';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 
@@ -24,20 +24,6 @@ const buildHeaders = (token?: string, accept = 'application/json'): Record<strin
   }
 
   return headers;
-};
-
-export const getFileMetadata = async (fileId: string, token?: string): Promise<RoCrateFile> => {
-  const url = buildUrl(`/entity/${encodeURIComponent(fileId)}`);
-
-  const response = await fetch(url.toString(), {
-    headers: buildHeaders(token, 'application/json'),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to get file metadata: ${response.status} ${response.statusText}`);
-  }
-
-  return response.json() as Promise<RoCrateFile>;
 };
 
 export const downloadFile = async (fileId: string, destDir: string, filename: string, token?: string): Promise<string> => {
@@ -64,13 +50,6 @@ export const downloadFile = async (fileId: string, destDir: string, filename: st
   return destPath;
 };
 
-export const downloadFileWithMetadata = async (fileId: string, destDir: string, token?: string): Promise<{ path: string; metadata: RoCrateFile }> => {
-  const metadata = await getFileMetadata(fileId, token);
-  const path = await downloadFile(fileId, destDir, metadata.filename, token);
-
-  return { path, metadata };
-};
-
 export const getEntityMetadata = async (entityId: string, token?: string): Promise<Entity> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}`);
 
@@ -85,7 +64,7 @@ export const getEntityMetadata = async (entityId: string, token?: string): Promi
   return response.json() as Promise<Entity>;
 };
 
-export const getEntityRoCrate = async (entityId: string, token?: string): Promise<unknown> => {
+const getEntityRoCrate = async (entityId: string, token?: string): Promise<unknown> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}/rocrate`);
 
   const response = await fetch(url.toString(), {

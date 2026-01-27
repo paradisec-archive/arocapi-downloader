@@ -88,10 +88,6 @@ export const getCollections = async (limit = 50, offset = 0, token?: string): Pr
   });
 };
 
-export const getCollection = async (id: string, token?: string): Promise<Entity> => {
-  return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });
-};
-
 export const getItemsInCollection = async (collectionId: string, limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {
   return fetchFromApi<PaginatedEntitiesResponse<Entity>>('/entities', {
     params: {
@@ -104,10 +100,6 @@ export const getItemsInCollection = async (collectionId: string, limit = 50, off
   });
 };
 
-export const getItem = async (id: string, token?: string): Promise<Entity> => {
-  return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });
-};
-
 export const getFilesInItem = async (itemId: string, limit = 100, offset = 0, token?: string): Promise<PaginatedFilesResponse<RoCrateFile>> => {
   return fetchFromApi<PaginatedFilesResponse<RoCrateFile>>('/files', {
     params: {
@@ -117,26 +109,6 @@ export const getFilesInItem = async (itemId: string, limit = 100, offset = 0, to
     },
     token,
   });
-};
-
-export const getFile = async (id: string, token?: string): Promise<RoCrateFile> => {
-  return fetchFromApi<RoCrateFile>(`/file/${encodeURIComponent(id)}`, { token });
-};
-
-export const downloadFile = async (id: string, token?: string): Promise<Response> => {
-  const base = new URL(baseUrl);
-  const basePath = base.pathname.endsWith('/') ? base.pathname.slice(0, -1) : base.pathname;
-  const url = new URL(`${basePath}/file/${encodeURIComponent(id)}`, base.origin);
-
-  const headers: Record<string, string> = {
-    Accept: '*/*',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  return fetch(url.toString(), { headers });
 };
 
 export const search = async (request: SearchRequest, token?: string): Promise<SearchResponse> => {

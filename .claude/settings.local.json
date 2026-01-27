@@ -1,5 +1,13 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm lint:types:*)", "mcp__tanstack__doc", "Bash(pnpm lint:biome:*)", "mcp__tanstack__search_docs", "WebSearch"]
+    "allow": [
+      "Bash(pnpm lint:types:*)",
+      "mcp__tanstack__doc",
+      "Bash(pnpm lint:biome:*)",
+      "mcp__tanstack__search_docs",
+      "WebSearch",
+      "Bash(pnpm lint:knip:*)",
+      "Bash(pnpm build:*)"
+    ]
   }
 }

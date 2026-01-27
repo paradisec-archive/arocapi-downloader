@@ -11,6 +11,8 @@
       "**",
       // Tanstack Start
       "!src/routeTree.gen.ts",
+      // shadcn/ui components
+      "!src/components/ui/",
       // Build output
       "!dist/",
       // Other

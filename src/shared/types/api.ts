@@ -11,12 +11,3 @@ export type PaginatedFilesResponse<T> = {
   limit: number;
   offset: number;
 };
-
-export type ApiError = {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-};
-
-// Type alias for backwards compatibility
-export type PaginatedResponse<T> = PaginatedEntitiesResponse<T>;

@@ -2,7 +2,7 @@ export type MediaType = 'audio/wav' | 'audio/mpeg' | 'video/x-matroska' | 'video
 
 export type QualityTier = 'archival' | 'presentation';
 
-export type FileType = 'audio' | 'video' | 'other';
+type FileType = 'audio' | 'video' | 'other';
 
 export type FileAccess = {
   content: boolean;
@@ -23,13 +23,7 @@ export type RoCrateFile = {
   access?: FileAccess;
 };
 
-export type FileWithQuality = RoCrateFile & {
-  qualityTier: QualityTier;
-  fileType: FileType;
-};
-
 export const ARCHIVAL_AUDIO_TYPES = ['audio/wav', 'audio/x-wav'];
-export const COMPRESSED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3'];
 export const ARCHIVAL_VIDEO_TYPES = ['video/x-matroska', 'video/mxf', 'video/x-msvideo'];
 
 export const getFileType = (mediaType: string): FileType => {

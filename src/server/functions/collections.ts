@@ -9,10 +9,6 @@ const paginationSchema = z.object({
   offset: z.number().int().nonnegative().optional(),
 });
 
-const idSchema = z.object({
-  id: z.string().min(1),
-});
-
 const collectionItemsSchema = z.object({
   collectionId: z.string().min(1),
   limit: z.number().int().positive().optional(),
@@ -25,14 +21,6 @@ export const getCollections = createServerFn({ method: 'GET' })
     const token = getCookie('access_token');
 
     return rocrate.getCollections(data.limit ?? 50, data.offset ?? 0, token);
-  });
-
-export const getCollection = createServerFn({ method: 'GET' })
-  .inputValidator(idSchema)
-  .handler(async ({ data }): Promise<Entity> => {
-    const token = getCookie('access_token');
-
-    return rocrate.getCollection(data.id, token);
   });
 
 export const getItemsInCollection = createServerFn({ method: 'GET' })
