@@ -76,7 +76,7 @@ export const Route = createFileRoute('/api/auth/callback')({
           }
 
           const headers = new Headers();
-          headers.set('Location', '/browser');
+          headers.set('Location', `${import.meta.env.BASE_URL}browser`);
           for (const cookie of cookies) {
             headers.append('Set-Cookie', cookie);
           }
