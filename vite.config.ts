@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  base: '', // Ensure everything is relative
+  base: process.env.NITRO_APP_BASE_URL,
   plugins: [
     tsConfigPaths(),
     tanstackStart(),

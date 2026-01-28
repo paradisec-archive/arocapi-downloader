@@ -15,6 +15,9 @@ RUN pnpm install --frozen-lockfile
 # Stage 2: Build the application
 FROM node:22-alpine AS builder
 
+# Build argument for base path
+ARG BASE_PATH=""
+
 RUN corepack enable
 
 WORKDIR /app
@@ -28,6 +31,9 @@ COPY tsconfig.json ./
 COPY vite.config.ts ./
 COPY src ./src
 COPY public ./public
+
+# Set base URL for Nitro build
+ENV NITRO_APP_BASE_URL=${BASE_PATH}
 
 # Build the application
 RUN pnpm build

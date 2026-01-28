@@ -7,7 +7,6 @@ export function getRouter() {
   const queryClient = new QueryClient();
 
   const router = createRouter({
-    basepath: import.meta.env.BASE_URL,
     routeTree,
     context: { queryClient },
     defaultPreload: 'intent',

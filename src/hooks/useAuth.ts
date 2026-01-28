@@ -20,11 +20,11 @@ export const useAuth = () => {
   }, [data, isCheckingAuth, setUser]);
 
   const login = () => {
-    window.location.href = '/api/auth/login';
+    window.location.href = `${import.meta.env.BASE_URL}api/auth/login`;
   };
 
   const logout = () => {
-    window.location.href = '/api/auth/logout';
+    window.location.href = `${import.meta.env.BASE_URL}api/auth/logout`;
   };
 
   return {
