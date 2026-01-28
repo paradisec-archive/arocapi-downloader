@@ -6,6 +6,7 @@ import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  base: '', // Ensure everything is relative
   plugins: [
     tsConfigPaths(),
     tanstackStart(),
