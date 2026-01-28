@@ -1,3 +1,9 @@
+## [1.1.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.0.2...v1.1.0) (2026-01-28)
+
+### Features
+
+* use relative base so app can run anywhere ([51dd1a5](https://github.com/paradisec-archive/arocapi-downloader/commit/51dd1a532498b236fa865d22f5b89442b52120f2))
+
 ## [1.0.2](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.0.1...v1.0.2) (2026-01-27)
 
 ### Bug Fixes
