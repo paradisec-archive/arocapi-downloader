@@ -1,11 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Button } from '~/components/ui/button';
+import { useAuth } from '~/hooks/useAuth';
 import { getAuthStatus } from '~/server/functions/auth';
 
 const HomePage = () => {
-  const handleLogin = () => {
-    window.location.href = '/api/auth/login';
-  };
+  const { login } = useAuth();
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
@@ -13,7 +12,7 @@ const HomePage = () => {
       <p className="max-w-md text-center text-lg text-muted-foreground">
         Browse and download files from RO-Crate collections. Select the files you need and receive a download link via email.
       </p>
-      <Button size="lg" onClick={handleLogin}>
+      <Button size="lg" onClick={login}>
         Sign in to get started
       </Button>
     </div>
