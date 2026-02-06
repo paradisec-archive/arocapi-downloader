@@ -68,6 +68,18 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
     console.log('Grouping files by collection and item...');
     const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
 
+    // Save RO-Crate metadata for each collection
+    const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
+
+    for (const collectionId of collectionIds) {
+      const collectionPath = extractPathFromId(collectionId);
+      const collectionDir = join(workDir, collectionPath);
+      await mkdir(collectionDir, { recursive: true });
+
+      console.log(`Downloading RO-Crate metadata for collection: ${collectionId}`);
+      await saveRoCrateMetadata(collectionId, collectionDir, accessToken);
+    }
+
     // Process each item group
     let downloadedCount = 0;
     for (const [, { itemId, files: itemFiles }] of filesByItem) {
