@@ -1,3 +1,16 @@
+## [1.2.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.1.0...v1.2.0) (2026-02-06)
+
+### Features
+
+* **docker:** add BASE_PATH build argument for configurable base URL ([b076a4b](https://github.com/paradisec-archive/arocapi-downloader/commit/b076a4b37ac2cf72f95aba0fbb16bf18fa1b7a0f))
+* use relative base so app can run anywhere ([a99900d](https://github.com/paradisec-archive/arocapi-downloader/commit/a99900d91c429945b622209aaf32af477e34116f))
+
+### Bug Fixes
+
+* broken sign in on front page ([d7e7ce0](https://github.com/paradisec-archive/arocapi-downloader/commit/d7e7ce0129ee86884ba3d658c846e6a499666ca7))
+* include the collection ro-crates ([f4e4415](https://github.com/paradisec-archive/arocapi-downloader/commit/f4e4415e152d02de02a9670d9ac746701d8df18d))
+* redirect url ([414c204](https://github.com/paradisec-archive/arocapi-downloader/commit/414c204d5df536acb94cc8255cd3aa01bb056a65))
+
 ## [1.1.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.0.2...v1.1.0) (2026-01-28)
 
 ### Features
