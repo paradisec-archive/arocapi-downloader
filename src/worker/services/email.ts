@@ -3,27 +3,76 @@ import { config } from '~/server/services/config';
 
 const sesClient = new SESClient({ region: config.AWS_REGION });
 
-type SendDownloadEmailParams = {
-  to: string;
-  downloadUrl: string;
-  fileCount: number;
-  totalSize: string;
+type MissingFile = {
+  filename: string;
+  error: string;
 };
 
-export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize }: SendDownloadEmailParams): Promise<void> => {
-  const command = new SendEmailCommand({
-    Source: config.EMAIL_FROM,
-    Destination: {
-      ToAddresses: [to],
-    },
-    Message: {
-      Subject: {
-        Data: 'Your RO-Crate download is ready',
-        Charset: 'UTF-8',
-      },
-      Body: {
-        Html: {
-          Data: `
+type SendDownloadEmailParams = {
+  to: string;
+  downloadUrl?: string;
+  fileCount: number;
+  totalSize: string;
+  missingFiles?: MissingFile[] | undefined;
+};
+
+const buildMissingFilesHtml = (missingFiles: MissingFile[]): string => `
+  <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 16px; margin: 16px 0;">
+    <h2 style="color: #dc2626; margin-top: 0; font-size: 16px;">
+      Warning: ${missingFiles.length} file${missingFiles.length !== 1 ? 's' : ''} could not be downloaded
+    </h2>
+    <ul style="margin: 8px 0; padding-left: 20px;">
+      ${missingFiles.map((f) => `<li><strong>${f.filename}</strong> — ${f.error}</li>`).join('\n      ')}
+    </ul>
+    <p style="color: #666; font-size: 14px; margin-bottom: 0;">
+      Please try submitting a new export request for these files. If the problem
+      persists, the files may be temporarily unavailable.
+    </p>
+  </div>`;
+
+const buildMissingFilesText = (missingFiles: MissingFile[]): string => {
+  const lines = [
+    `WARNING: ${missingFiles.length} file${missingFiles.length !== 1 ? 's' : ''} could not be downloaded:`,
+    '',
+    ...missingFiles.map((f) => `  - ${f.filename}: ${f.error}`),
+    '',
+    'Please try submitting a new export request for these files.',
+    'If the problem persists, the files may be temporarily unavailable.',
+  ];
+
+  return lines.join('\n');
+};
+
+export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize, missingFiles }: SendDownloadEmailParams): Promise<void> => {
+  const allFailed = !downloadUrl;
+  const hasMissing = missingFiles && missingFiles.length > 0;
+
+  const subject = allFailed ? 'Your RO-Crate download could not be completed' : 'Your RO-Crate download is ready';
+
+  const htmlBody = allFailed
+    ? `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: sans-serif; line-height: 1.6; color: #333;">
+  <h1 style="color: #dc2626;">Download Failed</h1>
+
+  <p>We were unable to download any of the <strong>${fileCount} file${fileCount !== 1 ? 's' : ''}</strong> you requested.</p>
+
+  ${hasMissing ? buildMissingFilesHtml(missingFiles) : ''}
+
+  <p>Please try submitting a new export request. If the problem persists, the files may be temporarily unavailable.</p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+
+  <p style="color: #999; font-size: 12px;">
+    RO-Crate Downloader
+  </p>
+</body>
+</html>`
+    : `
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,6 +91,8 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize 
     </a>
   </p>
 
+  ${hasMissing ? buildMissingFilesHtml(missingFiles) : ''}
+
   <p style="color: #666; font-size: 14px;">
     This link will expire in 24 hours. If you need to download the files again
     after the link expires, please submit a new export request.
@@ -53,20 +104,46 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize 
     RO-Crate Downloader
   </p>
 </body>
-</html>
-          `.trim(),
+</html>`;
+
+  const textBody = allFailed
+    ? [
+        'Download Failed',
+        '',
+        `We were unable to download any of the ${fileCount} file${fileCount !== 1 ? 's' : ''} you requested.`,
+        '',
+        ...(hasMissing ? [buildMissingFilesText(missingFiles), ''] : []),
+        'Please try submitting a new export request.',
+        'If the problem persists, the files may be temporarily unavailable.',
+      ].join('\n')
+    : [
+        'Your Download is Ready',
+        '',
+        `Your requested download containing ${fileCount} file${fileCount !== 1 ? 's' : ''} (${totalSize}) is ready.`,
+        '',
+        `Download link: ${downloadUrl}`,
+        '',
+        ...(hasMissing ? [buildMissingFilesText(missingFiles), ''] : []),
+        'This link will expire in 24 hours.',
+      ].join('\n');
+
+  const command = new SendEmailCommand({
+    Source: config.EMAIL_FROM,
+    Destination: {
+      ToAddresses: [to],
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: 'UTF-8',
+      },
+      Body: {
+        Html: {
+          Data: htmlBody.trim(),
           Charset: 'UTF-8',
         },
         Text: {
-          Data: `
-Your Download is Ready
-
-Your requested download containing ${fileCount} file${fileCount !== 1 ? 's' : ''} (${totalSize}) is ready.
-
-Download link: ${downloadUrl}
-
-This link will expire in 24 hours.
-          `.trim(),
+          Data: textBody.trim(),
           Charset: 'UTF-8',
         },
       },

@@ -82,6 +82,8 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
 
     // Process each item group
     let downloadedCount = 0;
+    const failedFiles: { filename: string; error: string }[] = [];
+
     for (const [, { itemId, files: itemFiles }] of filesByItem) {
       // Create directory structure using clean path from item ID
       // e.g. "https://example.com/repository/COLL/001" -> "example.com/COLL/001"
@@ -103,31 +105,49 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
         try {
           await downloadFile(file.id, itemDir, file.filename, accessToken);
         } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
           console.error(`Failed to download file ${file.id}:`, error);
-          throw error;
+          failedFiles.push({ filename: file.filename, error: message });
         }
       }
     }
 
-    console.log(`Creating zip archive for job ${jobId}`);
-    const zipPath = await createZipArchive(workDir, jobId);
+    const successCount = files.length - failedFiles.length;
 
-    const s3Key = `exports/${jobId}.zip`;
-    console.log(`Uploading to S3: ${s3Key}`);
-    await uploadToS3(zipPath, s3Key);
+    if (failedFiles.length > 0) {
+      console.warn(`${failedFiles.length}/${files.length} files failed to download`);
+    }
 
-    console.log(`Generating presigned URL`);
-    const downloadUrl = await generatePresignedUrl(s3Key);
+    if (successCount > 0) {
+      console.log(`Creating zip archive for job ${jobId}`);
+      const zipPath = await createZipArchive(workDir, jobId);
 
-    console.log(`Sending email to ${email}`);
-    await sendDownloadEmail({
-      to: email,
-      downloadUrl,
-      fileCount: files.length,
-      totalSize: formatFileSize(totalSize),
-    });
+      const s3Key = `exports/${jobId}.zip`;
+      console.log(`Uploading to S3: ${s3Key}`);
+      await uploadToS3(zipPath, s3Key);
 
-    console.log(`Job ${jobId} completed successfully`);
+      console.log(`Generating presigned URL`);
+      const downloadUrl = await generatePresignedUrl(s3Key);
+
+      console.log(`Sending email to ${email}`);
+      await sendDownloadEmail({
+        to: email,
+        downloadUrl,
+        fileCount: successCount,
+        totalSize: formatFileSize(totalSize),
+        missingFiles: failedFiles.length > 0 ? failedFiles : undefined,
+      });
+    } else {
+      console.log(`All files failed — sending failure email to ${email}`);
+      await sendDownloadEmail({
+        to: email,
+        fileCount: files.length,
+        totalSize: formatFileSize(totalSize),
+        missingFiles: failedFiles,
+      });
+    }
+
+    console.log(`Job ${jobId} completed${failedFiles.length > 0 ? ` with ${failedFiles.length} failed file(s)` : ' successfully'}`);
   } finally {
     await cleanupWorkDir(workDir);
   }
