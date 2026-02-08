@@ -1,31 +1,24 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
-import type { Entity, QualityTier, RoCrateFile } from '~/shared/types/index';
+import type { Entity, RoCrateFile } from '~/shared/types/index';
 
 type SelectionStateType = 'full' | 'partial' | 'none';
 
 // Helper function for quality filtering
-const isFileIncludedWithQuality = (file: RoCrateFile, audioQuality: QualityTier, videoQuality: QualityTier): boolean => {
+const isFileIncludedWithQuality = (file: RoCrateFile): boolean => {
   // Files without access cannot be selected
   if (file.access?.content === false) {
     return false;
   }
 
+  console.log('🪚 file.mediaType:', JSON.stringify(file.mediaType, null, 2));
   const fileType = getFileType(file.mediaType);
 
   if (fileType === 'audio') {
-    if (audioQuality === 'archival') {
-      return ARCHIVAL_AUDIO_TYPES.includes(file.mediaType);
-    }
-
     return !ARCHIVAL_AUDIO_TYPES.includes(file.mediaType);
   }
 
   if (fileType === 'video') {
-    if (videoQuality === 'archival') {
-      return ARCHIVAL_VIDEO_TYPES.includes(file.mediaType);
-    }
-
     return !ARCHIVAL_VIDEO_TYPES.includes(file.mediaType);
   }
 
@@ -46,9 +39,6 @@ const pendingItemsAtom = atom(new Set<string>());
 const collectionItemsAtom = atom(new Map<string, string[]>());
 const itemFilesAtom = atom(new Map<string, string[]>());
 
-const audioQualityAtom = atom<QualityTier>('presentation');
-const videoQualityAtom = atom<QualityTier>('presentation');
-
 const fileMetadataAtom = atom(new Map<string, RoCrateFile>());
 
 // Derived atoms
@@ -60,13 +50,11 @@ const pendingInfoAtom = atom((get) => ({
 const selectedFilesListAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
   const includedFiles: RoCrateFile[] = [];
 
   selectedFiles.forEach((fileId) => {
     const file = fileMetadata.get(fileId);
-    if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+    if (file && isFileIncludedWithQuality(file)) {
       includedFiles.push(file);
     }
   });
@@ -77,13 +65,11 @@ const selectedFilesListAtom = atom((get) => {
 const selectedFileIdsAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
   const includedFiles: string[] = [];
 
   selectedFiles.forEach((fileId) => {
     const file = fileMetadata.get(fileId);
-    if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+    if (file && isFileIncludedWithQuality(file)) {
       includedFiles.push(fileId);
     }
   });
@@ -94,13 +80,11 @@ const selectedFileIdsAtom = atom((get) => {
 const totalSelectedSizeAtom = atom((get) => {
   const selectedFiles = get(selectedFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
   let total = 0;
 
   selectedFiles.forEach((fileId) => {
     const file = fileMetadata.get(fileId);
-    if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+    if (file && isFileIncludedWithQuality(file)) {
       total += file.size;
     }
   });
@@ -120,8 +104,6 @@ const selectCollectionAtom = atom(null, (get, set, collectionId: string) => {
   const collectionItems = get(collectionItemsAtom);
   const itemFiles = get(itemFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
 
   const newSelectedCollections = new Set(selectedCollections);
   const newExpandedCollections = new Set(expandedCollections);
@@ -143,7 +125,7 @@ const selectCollectionAtom = atom(null, (get, set, collectionId: string) => {
       if (existingFileIds) {
         existingFileIds.forEach((fileId) => {
           const file = fileMetadata.get(fileId);
-          if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+          if (file && isFileIncludedWithQuality(file)) {
             newSelectedFiles.add(fileId);
           }
         });
@@ -208,8 +190,6 @@ const selectItemAtom = atom(null, (get, set, itemId: string) => {
   const selectedFiles = get(selectedFilesAtom);
   const itemFiles = get(itemFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
 
   const newSelectedItems = new Set(selectedItems);
   const newExpandedItems = new Set(expandedItems);
@@ -223,7 +203,7 @@ const selectItemAtom = atom(null, (get, set, itemId: string) => {
   if (existingFileIds) {
     existingFileIds.forEach((fileId) => {
       const file = fileMetadata.get(fileId);
-      if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+      if (file && isFileIncludedWithQuality(file)) {
         newSelectedFiles.add(fileId);
       }
     });
@@ -283,8 +263,6 @@ const registerItemsForCollectionAtom = atom(null, (get, set, { collectionId, ite
   const selectedFiles = get(selectedFilesAtom);
   const itemFiles = get(itemFilesAtom);
   const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
 
   const itemIds = items.map((item) => item.id);
   const newCollectionItems = new Map(collectionItems);
@@ -307,7 +285,7 @@ const registerItemsForCollectionAtom = atom(null, (get, set, { collectionId, ite
       if (existingFileIds) {
         existingFileIds.forEach((fileId) => {
           const file = fileMetadata.get(fileId);
-          if (file && isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+          if (file && isFileIncludedWithQuality(file)) {
             newSelectedFiles.add(fileId);
           }
         });
@@ -330,8 +308,6 @@ const registerFilesForItemAtom = atom(null, (get, set, { itemId, files }: { item
   const selectedItems = get(selectedItemsAtom);
   const selectedFiles = get(selectedFilesAtom);
   const pendingItems = get(pendingItemsAtom);
-  const audioQuality = get(audioQualityAtom);
-  const videoQuality = get(videoQualityAtom);
 
   const fileIds = files.map((file) => file.id);
   const newItemFiles = new Map(itemFiles);
@@ -345,7 +321,7 @@ const registerFilesForItemAtom = atom(null, (get, set, { itemId, files }: { item
     newPendingItems.delete(itemId);
 
     files.forEach((file) => {
-      if (isFileIncludedWithQuality(file, audioQuality, videoQuality)) {
+      if (isFileIncludedWithQuality(file)) {
         newSelectedFiles.add(file.id);
       }
     });
@@ -381,50 +357,6 @@ const toggleItemExpandAtom = atom(null, (get, set, itemId: string) => {
   set(expandedItemsAtom, newSet);
 });
 
-const setAudioQualityAtom = atom(null, (get, set, quality: QualityTier) => {
-  const selectedItems = get(selectedItemsAtom);
-  const itemFiles = get(itemFilesAtom);
-  const fileMetadata = get(fileMetadataAtom);
-  const videoQuality = get(videoQualityAtom);
-
-  const newSelectedFiles = new Set<string>();
-
-  selectedItems.forEach((itemId) => {
-    const fileIds = itemFiles.get(itemId) || [];
-    fileIds.forEach((fileId) => {
-      const file = fileMetadata.get(fileId);
-      if (file && isFileIncludedWithQuality(file, quality, videoQuality)) {
-        newSelectedFiles.add(fileId);
-      }
-    });
-  });
-
-  set(audioQualityAtom, quality);
-  set(selectedFilesAtom, newSelectedFiles);
-});
-
-const setVideoQualityAtom = atom(null, (get, set, quality: QualityTier) => {
-  const selectedItems = get(selectedItemsAtom);
-  const itemFiles = get(itemFilesAtom);
-  const fileMetadata = get(fileMetadataAtom);
-  const audioQuality = get(audioQualityAtom);
-
-  const newSelectedFiles = new Set<string>();
-
-  selectedItems.forEach((itemId) => {
-    const fileIds = itemFiles.get(itemId) || [];
-    fileIds.forEach((fileId) => {
-      const file = fileMetadata.get(fileId);
-      if (file && isFileIncludedWithQuality(file, audioQuality, quality)) {
-        newSelectedFiles.add(fileId);
-      }
-    });
-  });
-
-  set(videoQualityAtom, quality);
-  set(selectedFilesAtom, newSelectedFiles);
-});
-
 const addFileMetadataAtom = atom(null, (get, set, files: RoCrateFile[]) => {
   const fileMetadata = get(fileMetadataAtom);
   const newMap = new Map(fileMetadata);
@@ -455,8 +387,6 @@ const getCollectionSelectionState = (
   itemFiles: Map<string, string[]>,
   selectedFiles: Set<string>,
   fileMetadata: Map<string, RoCrateFile>,
-  audioQuality: QualityTier,
-  videoQuality: QualityTier,
 ): SelectionStateType => {
   if (!selectedCollections.has(collectionId)) {
     const itemIds = collectionItems.get(collectionId) || [];
@@ -483,7 +413,7 @@ const getCollectionSelectionState = (
 
     return fileIds.every((fileId) => {
       const file = fileMetadata.get(fileId);
-      if (file && !isFileIncludedWithQuality(file, audioQuality, videoQuality)) return true;
+      if (file && !isFileIncludedWithQuality(file)) return true;
 
       return selectedFiles.has(fileId);
     });
@@ -499,8 +429,6 @@ const getItemSelectionState = (
   itemFiles: Map<string, string[]>,
   selectedFiles: Set<string>,
   fileMetadata: Map<string, RoCrateFile>,
-  audioQuality: QualityTier,
-  videoQuality: QualityTier,
 ): SelectionStateType => {
   if (!selectedItems.has(itemId)) {
     const fileIds = itemFiles.get(itemId) || [];
@@ -520,7 +448,7 @@ const getItemSelectionState = (
 
   const allFilesSelected = fileIds.every((fileId) => {
     const file = fileMetadata.get(fileId);
-    if (file && !isFileIncludedWithQuality(file, audioQuality, videoQuality)) return true;
+    if (file && !isFileIncludedWithQuality(file)) return true;
 
     return selectedFiles.has(fileId);
   });
@@ -529,8 +457,8 @@ const getItemSelectionState = (
 };
 
 // Helper for components
-const isFileIncluded = (file: RoCrateFile, audioQuality: QualityTier, videoQuality: QualityTier): boolean => {
-  return isFileIncludedWithQuality(file, audioQuality, videoQuality);
+const isFileIncluded = (file: RoCrateFile): boolean => {
+  return isFileIncludedWithQuality(file);
 };
 
 // Custom hook for convenient access (similar to Zustand's useStore)
@@ -544,8 +472,6 @@ export const useSelectionStore = () => {
   const [pendingItems] = useAtom(pendingItemsAtom);
   const [collectionItems] = useAtom(collectionItemsAtom);
   const [itemFiles] = useAtom(itemFilesAtom);
-  const audioQuality = useAtomValue(audioQualityAtom);
-  const videoQuality = useAtomValue(videoQualityAtom);
   const [fileMetadata] = useAtom(fileMetadataAtom);
 
   const selectCollection = useSetAtom(selectCollectionAtom);
@@ -557,8 +483,6 @@ export const useSelectionStore = () => {
   const registerFilesForItem = useSetAtom(registerFilesForItemAtom);
   const toggleCollectionExpand = useSetAtom(toggleCollectionExpandAtom);
   const toggleItemExpand = useSetAtom(toggleItemExpandAtom);
-  const setAudioQuality = useSetAtom(setAudioQualityAtom);
-  const setVideoQuality = useSetAtom(setVideoQualityAtom);
   const addFileMetadata = useSetAtom(addFileMetadataAtom);
   const clearSelection = useSetAtom(clearSelectionAtom);
 
@@ -578,8 +502,6 @@ export const useSelectionStore = () => {
     pendingItems,
     collectionItems,
     itemFiles,
-    audioQuality,
-    videoQuality,
     fileMetadata,
 
     // Actions
@@ -592,8 +514,6 @@ export const useSelectionStore = () => {
     registerFilesForItem: (itemId: string, files: RoCrateFile[]) => registerFilesForItem({ itemId, files }),
     toggleCollectionExpand,
     toggleItemExpand,
-    setAudioQuality,
-    setVideoQuality,
     addFileMetadata,
     clearSelection,
 
@@ -602,7 +522,7 @@ export const useSelectionStore = () => {
     getSelectedFiles: () => selectedFilesList,
     getSelectedFileIds: () => selectedFileIds,
     getTotalSelectedSize: () => totalSelectedSize,
-    isFileIncluded: (file: RoCrateFile) => isFileIncluded(file, audioQuality, videoQuality),
+    isFileIncluded: (file: RoCrateFile) => isFileIncluded(file),
     getCollectionSelectionState: (collectionId: string) =>
       getCollectionSelectionState(
         collectionId,
@@ -614,10 +534,7 @@ export const useSelectionStore = () => {
         itemFiles,
         selectedFiles,
         fileMetadata,
-        audioQuality,
-        videoQuality,
       ),
-    getItemSelectionState: (itemId: string) =>
-      getItemSelectionState(itemId, selectedItems, pendingItems, itemFiles, selectedFiles, fileMetadata, audioQuality, videoQuality),
+    getItemSelectionState: (itemId: string) => getItemSelectionState(itemId, selectedItems, pendingItems, itemFiles, selectedFiles, fileMetadata),
   };
 };
