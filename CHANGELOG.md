@@ -1,3 +1,14 @@
+## [1.3.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.2.0...v1.3.0) (2026-02-09)
+
+### Features
+
+* **export:** filter RO-Crate metadata to only include downloaded files ([581491d](https://github.com/paradisec-archive/arocapi-downloader/commit/581491d5eebc94b52ac6eb08d78e5be81843035a))
+* **export:** notify user of missing files in download email ([6b5bc11](https://github.com/paradisec-archive/arocapi-downloader/commit/6b5bc11ac9c2f9681b01288669b6d89ca678a962))
+
+### Bug Fixes
+
+* cleanup quality selection ([341625f](https://github.com/paradisec-archive/arocapi-downloader/commit/341625faeca4b9975e9f489487a24639755e5ae5))
+
 ## [1.2.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.1.0...v1.2.0) (2026-02-06)
 
 ### Features
