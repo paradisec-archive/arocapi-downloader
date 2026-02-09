@@ -1,9 +1,10 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { formatFileSize } from '~/shared/formatters';
-import type { ExportFileInfo, ExportJobMessage } from '~/shared/types/index';
+import type { ExportFileInfo, ExportJobMessage, RoCrateMetadata } from '~/shared/types/index';
 import { sendDownloadEmail } from './services/email';
-import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate';
+import { downloadFile, getEntityMetadata, getEntityRoCrate, writeRoCrateMetadata } from './services/rocrate';
+import { filterRoCrate } from './services/rocrateFilter';
 import { generatePresignedUrl, uploadToS3 } from './services/s3';
 import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper';
 
@@ -68,48 +69,77 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
     console.log('Grouping files by collection and item...');
     const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
 
-    // Save RO-Crate metadata for each collection
+    // Fetch RO-Crate metadata for each collection (store in memory, don't write yet)
     const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
 
+    const collectionMetadata = new Map<string, RoCrateMetadata>();
     for (const collectionId of collectionIds) {
-      const collectionPath = extractPathFromId(collectionId);
-      const collectionDir = join(workDir, collectionPath);
-      await mkdir(collectionDir, { recursive: true });
-
-      console.log(`Downloading RO-Crate metadata for collection: ${collectionId}`);
-      await saveRoCrateMetadata(collectionId, collectionDir, accessToken);
+      console.log(`Fetching RO-Crate metadata for collection: ${collectionId}`);
+      const metadata = await getEntityRoCrate(collectionId, accessToken);
+      collectionMetadata.set(collectionId, metadata);
     }
+
+    // Track which items had at least one successful file, grouped by collection
+    const itemsWithFilesByCollection = new Map<string, Set<string>>();
 
     // Process each item group
     let downloadedCount = 0;
     const failedFiles: { filename: string; error: string }[] = [];
 
-    for (const [, { itemId, files: itemFiles }] of filesByItem) {
+    for (const [, { itemId, collectionId, files: itemFiles }] of filesByItem) {
       // Create directory structure using clean path from item ID
-      // e.g. "https://example.com/repository/COLL/001" -> "example.com/COLL/001"
       const itemPath = extractPathFromId(itemId);
       const itemDir = join(workDir, itemPath);
       await mkdir(itemDir, { recursive: true });
 
       console.log(`Processing item ${itemId}: ${itemFiles.length} files -> ${itemPath}`);
 
-      // Download RO-Crate metadata for the item
-      console.log(`Downloading RO-Crate metadata for item: ${itemId}`);
-      await saveRoCrateMetadata(itemId, itemDir, accessToken);
+      // Fetch item RO-Crate metadata (store in memory)
+      console.log(`Fetching RO-Crate metadata for item: ${itemId}`);
+      const itemMetadata = await getEntityRoCrate(itemId, accessToken);
 
-      // Download each file into the item directory
+      // Download each file, tracking successes
+      const successfulFileIds = new Set<string>();
+
       for (const file of itemFiles) {
         downloadedCount++;
         console.log(`Downloading file ${downloadedCount}/${files.length}: ${file.filename}`);
 
         try {
           await downloadFile(file.id, itemDir, file.filename, accessToken);
+          successfulFileIds.add(file.id);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           console.error(`Failed to download file ${file.id}:`, error);
           failedFiles.push({ filename: file.filename, error: message });
         }
       }
+
+      // Write filtered item RO-Crate metadata (only if at least one file succeeded)
+      if (successfulFileIds.size > 0) {
+        const filteredMetadata = filterRoCrate(itemMetadata, successfulFileIds);
+        await writeRoCrateMetadata(filteredMetadata, itemDir);
+
+        // Track this item as having files for collection-level filtering
+        const itemsSet = itemsWithFilesByCollection.get(collectionId) ?? new Set<string>();
+        itemsSet.add(itemId);
+        itemsWithFilesByCollection.set(collectionId, itemsSet);
+      }
+    }
+
+    // Write filtered collection RO-Crate metadata
+    for (const [collectionId, metadata] of collectionMetadata) {
+      const includedItemIds = itemsWithFilesByCollection.get(collectionId) ?? new Set<string>();
+      if (includedItemIds.size === 0) {
+        continue;
+      }
+
+      const collectionPath = extractPathFromId(collectionId);
+      const collectionDir = join(workDir, collectionPath);
+      await mkdir(collectionDir, { recursive: true });
+
+      const filteredMetadata = filterRoCrate(metadata, includedItemIds);
+      await writeRoCrateMetadata(filteredMetadata, collectionDir);
     }
 
     const successCount = files.length - failedFiles.length;

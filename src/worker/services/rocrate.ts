@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { config } from '~/server/services/config';
-import type { Entity } from '~/shared/types/index';
+import type { Entity, RoCrateMetadata } from '~/shared/types/index';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 
@@ -64,7 +64,7 @@ export const getEntityMetadata = async (entityId: string, token?: string): Promi
   return response.json() as Promise<Entity>;
 };
 
-const getEntityRoCrate = async (entityId: string, token?: string): Promise<unknown> => {
+export const getEntityRoCrate = async (entityId: string, token?: string): Promise<RoCrateMetadata> => {
   const url = buildUrl(`/entity/${encodeURIComponent(entityId)}/rocrate`);
 
   const response = await fetch(url.toString(), {
@@ -75,13 +75,12 @@ const getEntityRoCrate = async (entityId: string, token?: string): Promise<unkno
     throw new Error(`Failed to get RO-Crate metadata: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  return response.json() as Promise<RoCrateMetadata>;
 };
 
-export const saveRoCrateMetadata = async (entityId: string, destDir: string, token?: string): Promise<string> => {
-  const rocrate = await getEntityRoCrate(entityId, token);
+export const writeRoCrateMetadata = async (metadata: RoCrateMetadata, destDir: string): Promise<string> => {
   const destPath = join(destDir, 'ro-crate-metadata.json');
-  await writeFile(destPath, JSON.stringify(rocrate, null, 2));
+  await writeFile(destPath, JSON.stringify(metadata, null, 2));
 
   return destPath;
 };
