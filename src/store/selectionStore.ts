@@ -1,4 +1,5 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback } from 'react';
 import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_IMAGE_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
 import type { Entity, RoCrateFile } from '~/shared/types/index';
 
@@ -509,8 +510,11 @@ export const useSelectionStore = () => {
     selectItem,
     deselectItem,
     toggleFileSelection,
-    registerItemsForCollection: (collectionId: string, items: Entity[]) => registerItemsForCollection({ collectionId, items }),
-    registerFilesForItem: (itemId: string, files: RoCrateFile[]) => registerFilesForItem({ itemId, files }),
+    registerItemsForCollection: useCallback(
+      (collectionId: string, items: Entity[]) => registerItemsForCollection({ collectionId, items }),
+      [registerItemsForCollection],
+    ),
+    registerFilesForItem: useCallback((itemId: string, files: RoCrateFile[]) => registerFilesForItem({ itemId, files }), [registerFilesForItem]),
     toggleCollectionExpand,
     toggleItemExpand,
     addFileMetadata,

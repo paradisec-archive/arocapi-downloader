@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { LoadingSpinner } from '~/components/common/LoadingSpinner';
+import { SearchCollectionGroup } from '~/components/search/SearchCollectionGroup';
 import { SearchResultItem } from '~/components/search/SearchResultItem';
 import { Pagination } from '~/components/ui/pagination';
 import { useSearch } from '~/hooks/useSearch';
+import { groupSearchResults } from '~/lib/groupSearchResults';
 
 type SearchResultsProps = {
   query: string;
@@ -19,6 +22,14 @@ export const SearchResults = ({ query, page, onPageChange }: SearchResultsProps)
     limit: RESULTS_PER_PAGE,
     offset,
   });
+
+  const grouped = useMemo(() => {
+    if (!data) {
+      return undefined;
+    }
+
+    return groupSearchResults(data.entities);
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -55,7 +66,11 @@ export const SearchResults = ({ query, page, onPageChange }: SearchResultsProps)
       </p>
 
       <div className="space-y-3">
-        {data.entities.map((entity) => (
+        {grouped?.collectionGroups.map((group) => (
+          <SearchCollectionGroup key={group.collectionId} collectionId={group.collectionId} collectionEntity={group.collectionEntity} />
+        ))}
+
+        {grouped?.other.map((entity) => (
           <SearchResultItem key={entity.id} entity={entity} />
         ))}
       </div>

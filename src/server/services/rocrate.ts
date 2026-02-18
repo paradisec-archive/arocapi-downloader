@@ -111,6 +111,10 @@ export const getFilesInItem = async (itemId: string, limit = 100, offset = 0, to
   });
 };
 
+export const getEntity = async (id: string, token?: string): Promise<Entity> => {
+  return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });
+};
+
 export const search = async (request: SearchRequest, token?: string): Promise<SearchResponse> => {
   return postToApi<SearchResponse>('/search', {
     body: request as unknown as Record<string, unknown>,
