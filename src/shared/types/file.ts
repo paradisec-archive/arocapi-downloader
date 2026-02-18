@@ -25,6 +25,7 @@ export type RoCrateFile = {
 
 export const ARCHIVAL_AUDIO_TYPES = ['audio/wav', 'audio/x-wav'];
 export const ARCHIVAL_VIDEO_TYPES = ['video/x-matroska', 'video/matroska', 'video/mxf', 'video/x-msvideo'];
+export const ARCHIVAL_IMAGE_TYPES = ['image/tiff'];
 
 export const getFileType = (mediaType: string): FileType => {
   if (mediaType.startsWith('audio/')) {
@@ -39,7 +40,7 @@ export const getFileType = (mediaType: string): FileType => {
 };
 
 export const getQualityTier = (mediaType: string): QualityTier => {
-  if (ARCHIVAL_AUDIO_TYPES.includes(mediaType) || ARCHIVAL_VIDEO_TYPES.includes(mediaType)) {
+  if (ARCHIVAL_AUDIO_TYPES.includes(mediaType) || ARCHIVAL_VIDEO_TYPES.includes(mediaType) || ARCHIVAL_IMAGE_TYPES.includes(mediaType)) {
     return 'archival';
   }
 

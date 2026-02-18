@@ -1,5 +1,5 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
+import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_IMAGE_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
 import type { Entity, RoCrateFile } from '~/shared/types/index';
 
 type SelectionStateType = 'full' | 'partial' | 'none';
@@ -11,7 +11,6 @@ const isFileIncludedWithQuality = (file: RoCrateFile): boolean => {
     return false;
   }
 
-  console.log('🪚 file.mediaType:', JSON.stringify(file.mediaType, null, 2));
   const fileType = getFileType(file.mediaType);
 
   if (fileType === 'audio') {
@@ -22,7 +21,7 @@ const isFileIncludedWithQuality = (file: RoCrateFile): boolean => {
     return !ARCHIVAL_VIDEO_TYPES.includes(file.mediaType);
   }
 
-  return true;
+  return !ARCHIVAL_IMAGE_TYPES.includes(file.mediaType);
 };
 
 // Primitive atoms

@@ -55,7 +55,7 @@ export const FileRow = ({ file, disabled = false }: FileRowProps) => {
         </span>
       )}
 
-      {fileType !== 'other' && (
+      {(fileType !== 'other' || qualityTier === 'archival') && (
         <span
           className={cn(
             'text-xs px-1.5 py-0.5 rounded',
