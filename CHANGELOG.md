@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.4.0...v1.5.0) (2026-02-23)
+
+### Features
+
+* **search:** improve facet panel UX with buffered selection, search, and sorting ([618dbf2](https://github.com/paradisec-archive/arocapi-downloader/commit/618dbf21c65159b34294d0275df23e59574750fa))
+
 ## [1.4.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.3.0...v1.4.0) (2026-02-23)
 
 ### Features
