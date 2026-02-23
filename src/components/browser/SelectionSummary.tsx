@@ -49,11 +49,11 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
         },
       }),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success && result.jobId) {
         clearSelection();
         setShowEmailInput(false);
         setEmailInput('');
-        navigate({ to: '/export-status' });
+        navigate({ to: '/export-status', search: { jobId: result.jobId } });
       }
     },
   });

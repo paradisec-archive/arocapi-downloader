@@ -1,7 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { getCookie } from '~/server/services/cookies';
-import type { ExportJobMessage } from '~/shared/types/index';
+import type { ExportJobMessage, JobStatus } from '~/shared/types/index';
+import { failJob, getJobStatus as getJobStatusFromStore, initJob } from '~/worker/jobStore';
 import { processJob } from '~/worker/processor';
 
 const exportFileSchema = z.object({
@@ -40,6 +41,9 @@ export const submitExport = createServerFn({ method: 'POST' })
     }
 
     const jobId = crypto.randomUUID();
+    const totalSize = data.files.reduce((sum, f) => sum + f.size, 0);
+    initJob(jobId, data.files.length, totalSize);
+
     const job: ExportJobMessage = {
       jobId,
       files: data.files,
@@ -50,7 +54,9 @@ export const submitExport = createServerFn({ method: 'POST' })
 
     // Run in background - don't await
     processJob(job).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
       console.error(`Export job ${jobId} failed:`, error);
+      failJob(jobId, message);
     });
 
     return {
@@ -58,4 +64,10 @@ export const submitExport = createServerFn({ method: 'POST' })
       jobId,
       message: `Export request submitted. You will receive an email at ${data.email} when your download is ready.`,
     };
+  });
+
+export const getJobStatus = createServerFn({ method: 'GET' })
+  .inputValidator((data: unknown) => z.object({ jobId: z.string().uuid() }).parse(data))
+  .handler(async ({ data }): Promise<JobStatus | null> => {
+    return getJobStatusFromStore(data.jobId);
   });

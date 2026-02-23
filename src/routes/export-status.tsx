@@ -1,28 +1,233 @@
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Download, HardDrive, Info, Loader2, MemoryStick, XCircle } from 'lucide-react';
+import { z } from 'zod';
 import { buttonVariants } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { getJobStatus } from '~/server/functions/export';
+import { formatFileSize } from '~/shared/formatters';
+import type { JobPhase, JobStatus } from '~/shared/types/index';
+
+const searchSchema = z.object({
+  jobId: z.string().uuid(),
+});
 
 export const Route = createFileRoute('/export-status')({
+  validateSearch: (search) => searchSchema.parse(search),
   component: ExportStatusPage,
 });
 
+const PHASE_LABELS: Record<JobPhase, string> = {
+  grouping: 'Organising files',
+  downloading: 'Downloading files',
+  zipping: 'Creating archive',
+  uploading: 'Uploading to storage',
+  emailing: 'Sending email',
+  complete: 'Complete',
+  failed: 'Failed',
+};
+
+const PHASE_ORDER: JobPhase[] = ['grouping', 'downloading', 'zipping', 'uploading', 'emailing', 'complete'];
+
+const PhaseStepperItem = ({ phase, currentPhase }: { phase: JobPhase; currentPhase: JobPhase }) => {
+  const currentIdx = PHASE_ORDER.indexOf(currentPhase);
+  const phaseIdx = PHASE_ORDER.indexOf(phase);
+  const isActive = phase === currentPhase;
+  const isComplete = currentIdx > phaseIdx;
+
+  return (
+    <div className="flex items-center gap-2">
+      {isComplete ? (
+        <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
+      ) : isActive ? (
+        <Loader2 className="h-4 w-4 text-blue-500 animate-spin shrink-0" />
+      ) : (
+        <div className="h-4 w-4 rounded-full border-2 border-muted shrink-0" />
+      )}
+      <span className={isComplete ? 'text-sm text-muted-foreground' : isActive ? 'text-sm font-medium' : 'text-sm text-muted-foreground/60'}>
+        {PHASE_LABELS[phase]}
+      </span>
+    </div>
+  );
+};
+
+const ProgressBar = ({ status }: { status: JobStatus }) => {
+  const percent = status.totalFiles > 0 ? Math.round((status.downloadedFiles / status.totalFiles) * 100) : 0;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <span>
+          {status.downloadedFiles} / {status.totalFiles} files
+        </span>
+        <span>{percent}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-muted overflow-hidden">
+        <div className="h-full rounded-full bg-blue-500 transition-all duration-300" style={{ width: `${percent}%` }} />
+      </div>
+      {status.totalSize > 0 && <div className="text-xs text-muted-foreground">Total size: {formatFileSize(status.totalSize)}</div>}
+    </div>
+  );
+};
+
+const FailedFilesList = ({ files }: { files: Array<{ filename: string; error: string }> }) => {
+  if (files.length === 0) return null;
+
+  return (
+    <div className="rounded-md border border-amber-200 bg-amber-50 p-3 space-y-1">
+      <div className="flex items-center gap-2 text-sm font-medium text-amber-800">
+        <AlertTriangle className="h-4 w-4" />
+        {files.length} file{files.length !== 1 ? 's' : ''} failed to download
+      </div>
+      <ul className="text-xs text-amber-700 space-y-0.5 max-h-32 overflow-y-auto">
+        {files.map((f) => (
+          <li key={f.filename} className="truncate">
+            {f.filename}: {f.error}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const ResourceStats = ({ status }: { status: JobStatus }) => (
+  <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+    <div className="space-y-1">
+      <div className="flex items-center gap-1 font-medium">
+        <MemoryStick className="h-3 w-3" />
+        Memory
+      </div>
+      <div>
+        Heap: {status.memory.heapUsedMB} / {status.memory.heapTotalMB} MB
+      </div>
+      <div>RSS: {status.memory.rssMB} MB</div>
+    </div>
+    <div className="space-y-1">
+      <div className="flex items-center gap-1 font-medium">
+        <HardDrive className="h-3 w-3" />
+        Disk
+      </div>
+      <div>Work dir: {status.disk.workDirSizeMB} MB</div>
+      <div>Tmp free: {status.disk.tmpFreeSpaceMB} MB</div>
+    </div>
+  </div>
+);
+
 function ExportStatusPage() {
+  const { jobId } = Route.useSearch();
+
+  const { data: status, isLoading } = useQuery({
+    queryKey: ['jobStatus', jobId],
+    queryFn: () => getJobStatus({ data: { jobId } }),
+    refetchInterval: (query) => {
+      const phase = query.state.data?.phase;
+      if (phase === 'complete' || phase === 'failed') return false;
+
+      return 2000;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!status) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <CardTitle>Job Not Found</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-muted-foreground">This export job may have expired or the link is invalid. Completed jobs are removed after 1 hour.</p>
+            <Link to="/browser" className={buttonVariants()}>
+              Back to Browser
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status.phase === 'complete') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-lg w-full">
+          <CardHeader className="text-center">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <CardTitle>Export Complete</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FailedFilesList files={status.failedFiles} />
+            {status.downloadUrl && (
+              <div className="text-center">
+                <a href={status.downloadUrl} className={buttonVariants({ size: 'lg' })}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Zip
+                </a>
+                <p className="text-xs text-muted-foreground mt-2">This link expires in 24 hours. A copy has also been sent to your email.</p>
+              </div>
+            )}
+            <div className="text-center">
+              <Link to="/browser" className={buttonVariants({ variant: 'outline' })}>
+                Browse More Collections
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (status.phase === 'failed') {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <CardTitle>Export Failed</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            {status.errorMessage && <p className="text-sm text-destructive">{status.errorMessage}</p>}
+            <FailedFilesList files={status.failedFiles} />
+            <Link to="/browser" className={buttonVariants()}>
+              Back to Browser
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // In-progress states
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <CardTitle>Export Request Submitted</CardTitle>
+      <Card className="max-w-lg w-full">
+        <CardHeader>
+          <CardTitle>Exporting Files</CardTitle>
         </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            Your download request has been submitted successfully. You will receive an email with a download link when your files are ready.
-          </p>
-          <p className="text-sm text-muted-foreground">This may take a few minutes depending on the size of your selection.</p>
-          <Link to="/browser" className={buttonVariants()}>
-            Browse More Collections
-          </Link>
+        <CardContent className="space-y-5">
+          <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+            <Info className="h-4 w-4 mt-0.5 shrink-0" />
+            <span>You can safely close this page. An email will be sent when your download is ready.</span>
+          </div>
+
+          <div className="space-y-2">
+            {PHASE_ORDER.filter((p) => p !== 'complete').map((phase) => (
+              <PhaseStepperItem key={phase} phase={phase} currentPhase={status.phase} />
+            ))}
+          </div>
+
+          {status.phase === 'downloading' && <ProgressBar status={status} />}
+
+          <FailedFilesList files={status.failedFiles} />
+
+          <ResourceStats status={status} />
         </CardContent>
       </Card>
     </div>
