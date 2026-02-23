@@ -1,3 +1,10 @@
+## [1.6.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.5.0...v1.6.0) (2026-02-23)
+
+### Features
+
+* **export:** add real-time export progress tracking ([2f70bcd](https://github.com/paradisec-archive/arocapi-downloader/commit/2f70bcd3bd5046776f32ab0a124957b0100334f7))
+* **ui:** display build version in footer ([dc4266d](https://github.com/paradisec-archive/arocapi-downloader/commit/dc4266d54e5e342f89d2fa2aeca52574357f28c6))
+
 ## [1.5.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.4.0...v1.5.0) (2026-02-23)
 
 ### Features
