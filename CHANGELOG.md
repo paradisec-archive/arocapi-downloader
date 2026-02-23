@@ -1,3 +1,9 @@
+## [1.7.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.6.0...v1.7.0) (2026-02-23)
+
+### Features
+
+* **export:** add progress bars for archiving and upload phases ([9b7c92b](https://github.com/paradisec-archive/arocapi-downloader/commit/9b7c92b941d2d5562aeaceec6f758fd5a023d75e))
+
 ## [1.6.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.5.0...v1.6.0) (2026-02-23)
 
 ### Features
