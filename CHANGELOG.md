@@ -1,3 +1,15 @@
+## [1.4.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.3.0...v1.4.0) (2026-02-23)
+
+### Features
+
+* **search:** group search results by parent collection ([73cba81](https://github.com/paradisec-archive/arocapi-downloader/commit/73cba813affcbbe14a316bbcf619108f2ae11542))
+* **search:** unify browse and search into single page with faceted filtering ([92bdd38](https://github.com/paradisec-archive/arocapi-downloader/commit/92bdd38117ad5585bd59a037f6ef51cbf5bd06a9))
+* treat TIFF files as archival quality tier ([b0d7983](https://github.com/paradisec-archive/arocapi-downloader/commit/b0d7983ac2e85c560211815854bf09342cdceb12))
+
+### Reverts
+
+* Revert "feat(export): filter RO-Crate metadata to only include downloaded files" ([dce0e84](https://github.com/paradisec-archive/arocapi-downloader/commit/dce0e840930a2e935f7869a53de8c388e097255f))
+
 ## [1.3.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.2.0...v1.3.0) (2026-02-09)
 
 ### Features
