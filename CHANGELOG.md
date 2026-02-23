@@ -1,3 +1,9 @@
+## [1.8.1](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.8.0...v1.8.1) (2026-02-23)
+
+### Bug Fixes
+
+* **export:** externalise yazl and buffer-crc32 to fix CJS/ESM interop ([f53f88e](https://github.com/paradisec-archive/arocapi-downloader/commit/f53f88e41c1353becf67cb474032b71944494064))
+
 ## [1.8.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.7.1...v1.8.0) (2026-02-23)
 
 ### Features
