@@ -5,7 +5,8 @@ import * as rocrate from '~/server/services/rocrate';
 import type { SearchRequest } from '~/shared/types/index';
 
 const searchSchema = z.object({
-  query: z.string().min(1),
+  query: z.string(),
+  filters: z.record(z.string(), z.array(z.string())).optional(),
   limit: z.number().int().positive().optional(),
   offset: z.number().int().nonnegative().optional(),
   sort: z.enum(['id', 'name', 'createdAt', 'updatedAt']).optional(),
@@ -23,6 +24,10 @@ export const searchEntities = createServerFn({ method: 'POST' })
       limit: data.limit ?? 50,
       offset: data.offset ?? 0,
     };
+
+    if (data.filters && Object.keys(data.filters).length > 0) {
+      request.filters = data.filters;
+    }
 
     if (data.sort) {
       request.sort = data.sort;

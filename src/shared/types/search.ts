@@ -1,7 +1,13 @@
+export type FacetBucket = { name: string; count: number };
+
+export type Facets = Record<string, FacetBucket[]>;
+
+export type FacetFilters = Record<string, string[]>;
+
 export type SearchRequest = {
   searchType: 'basic' | 'advanced';
   query: string;
-  filters?: Record<string, unknown> | undefined;
+  filters?: FacetFilters | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
   sort?: 'id' | 'name' | 'createdAt' | 'updatedAt' | undefined;
@@ -18,9 +24,6 @@ export type SearchEntity = {
   access: { metadata: boolean; content: boolean };
   searchExtra: { score: number; highlight: Record<string, string[]> };
 };
-
-// biome-ignore lint/suspicious/noExplicitAny: API returns dynamic facet structure
-export type Facets = Record<string, any>;
 
 export type SearchResponse = {
   total: number;

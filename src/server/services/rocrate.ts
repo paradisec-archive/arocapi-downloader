@@ -47,7 +47,6 @@ type PostOptions = {
 };
 
 const postToApi = async <T>(endpoint: string, options: PostOptions): Promise<T> => {
-  console.log('🪚 options:', JSON.stringify(options, null, 2));
   const base = new URL(baseUrl);
   const basePath = base.pathname.endsWith('/') ? base.pathname.slice(0, -1) : base.pathname;
   const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -72,20 +71,8 @@ const postToApi = async <T>(endpoint: string, options: PostOptions): Promise<T> 
   }
 
   const data = response.json() as Promise<T>;
-  console.log('🪚 data:', JSON.stringify(data, null, 2));
 
   return data;
-};
-
-export const getCollections = async (limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {
-  return fetchFromApi<PaginatedEntitiesResponse<Entity>>('/entities', {
-    params: {
-      entityType: 'http://pcdm.org/models#Collection',
-      limit,
-      offset,
-    },
-    token,
-  });
 };
 
 export const getItemsInCollection = async (collectionId: string, limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {

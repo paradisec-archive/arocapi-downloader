@@ -7,7 +7,7 @@ export const Header = () => {
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   const routerState = useRouterState();
 
-  // Extract search query from URL if on search page
+  // Extract search query from URL if on browser page
   const searchParams = routerState.location.search;
   const currentQuery = searchParams.q || '';
 
@@ -21,12 +21,6 @@ export const Header = () => {
           {isAuthenticated && <SearchBar initialQuery={currentQuery} />}
         </div>
         <nav className="flex items-center gap-4">
-          {isAuthenticated && (
-            <Link to="/browser" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              Browse
-            </Link>
-          )}
-
           {isLoading ? (
             <span className="text-sm text-muted-foreground">Loading...</span>
           ) : isAuthenticated && user ? (

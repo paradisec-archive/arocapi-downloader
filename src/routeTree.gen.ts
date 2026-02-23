@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SearchRouteImport } from './routes/search'
 import { Route as ExportStatusRouteImport } from './routes/export-status'
 import { Route as BrowserRouteImport } from './routes/browser'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,11 +16,6 @@ import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
 import { Route as ApiAuthLoginRouteImport } from './routes/api/auth/login'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ExportStatusRoute = ExportStatusRouteImport.update({
   id: '/export-status',
   path: '/export-status',
@@ -57,7 +51,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browser': typeof BrowserRoute
   '/export-status': typeof ExportStatusRoute
-  '/search': typeof SearchRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -66,7 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browser': typeof BrowserRoute
   '/export-status': typeof ExportStatusRoute
-  '/search': typeof SearchRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -76,7 +68,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/browser': typeof BrowserRoute
   '/export-status': typeof ExportStatusRoute
-  '/search': typeof SearchRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/login': typeof ApiAuthLoginRoute
   '/api/auth/logout': typeof ApiAuthLogoutRoute
@@ -87,7 +78,6 @@ export interface FileRouteTypes {
     | '/'
     | '/browser'
     | '/export-status'
-    | '/search'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -96,7 +86,6 @@ export interface FileRouteTypes {
     | '/'
     | '/browser'
     | '/export-status'
-    | '/search'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -105,7 +94,6 @@ export interface FileRouteTypes {
     | '/'
     | '/browser'
     | '/export-status'
-    | '/search'
     | '/api/auth/callback'
     | '/api/auth/login'
     | '/api/auth/logout'
@@ -115,7 +103,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowserRoute: typeof BrowserRoute
   ExportStatusRoute: typeof ExportStatusRoute
-  SearchRoute: typeof SearchRoute
   ApiAuthCallbackRoute: typeof ApiAuthCallbackRoute
   ApiAuthLoginRoute: typeof ApiAuthLoginRoute
   ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
@@ -123,13 +110,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/export-status': {
       id: '/export-status'
       path: '/export-status'
@@ -179,7 +159,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowserRoute: BrowserRoute,
   ExportStatusRoute: ExportStatusRoute,
-  SearchRoute: SearchRoute,
   ApiAuthCallbackRoute: ApiAuthCallbackRoute,
   ApiAuthLoginRoute: ApiAuthLoginRoute,
   ApiAuthLogoutRoute: ApiAuthLogoutRoute,

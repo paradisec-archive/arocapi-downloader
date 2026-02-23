@@ -1,32 +1,41 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '~/components/common/LoadingSpinner';
 import { Button } from '~/components/ui/button';
 import { Checkbox } from '~/components/ui/checkbox';
+import { useEntity } from '~/hooks/useEntity';
 import type { Entity } from '~/shared/types/index';
 import { useSelectionStore } from '~/store/selectionStore';
 import { ItemList } from './ItemList';
 
 type CollectionItemProps = {
-  collection: Entity;
+  collectionId: string;
+  collection?: Entity | undefined;
 };
 
-export const CollectionItem = ({ collection }: CollectionItemProps) => {
+export const CollectionItem = ({ collectionId, collection }: CollectionItemProps) => {
   const { expandedCollections, pendingCollections, selectCollection, deselectCollection, toggleCollectionExpand, getCollectionSelectionState } =
     useSelectionStore();
 
-  const selectionState = getCollectionSelectionState(collection.id);
-  const isExpanded = expandedCollections.has(collection.id);
-  const isPending = pendingCollections.has(collection.id);
+  const { data: fetchedEntity, isLoading: isEntityLoading } = useEntity(collection ? undefined : collectionId);
+
+  const entity = collection ?? fetchedEntity;
+  const collectionName = entity?.name ?? collectionId;
+  const collectionDescription = entity?.description;
+
+  const selectionState = getCollectionSelectionState(collectionId);
+  const isExpanded = expandedCollections.has(collectionId);
+  const isPending = pendingCollections.has(collectionId);
 
   const handleCheckboxChange = () => {
     if (selectionState === 'none') {
-      selectCollection(collection.id);
+      selectCollection(collectionId);
     } else {
-      deselectCollection(collection.id);
+      deselectCollection(collectionId);
     }
   };
 
   const handleExpandClick = () => {
-    toggleCollectionExpand(collection.id);
+    toggleCollectionExpand(collectionId);
   };
 
   return (
@@ -36,7 +45,7 @@ export const CollectionItem = ({ collection }: CollectionItemProps) => {
           checked={selectionState === 'full'}
           indeterminate={selectionState === 'partial'}
           onCheckedChange={handleCheckboxChange}
-          aria-label={`Select ${collection.name}`}
+          aria-label={`Select ${collectionName}`}
         />
 
         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleExpandClick} aria-label={isExpanded ? 'Collapse' : 'Expand'}>
@@ -45,17 +54,18 @@ export const CollectionItem = ({ collection }: CollectionItemProps) => {
 
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate flex items-center gap-2">
-            {collection.name}
+            {isEntityLoading ? <LoadingSpinner size="sm" /> : collectionName}
+            <span className="shrink-0 rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">Collection</span>
             {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
-          <div className="italic">{collection.id}</div>
-          {collection.description && <div className="text-sm text-muted-foreground truncate">{collection.description}</div>}
+          <div className="italic">{collectionId}</div>
+          {collectionDescription && <div className="text-sm text-muted-foreground truncate">{collectionDescription}</div>}
         </div>
       </div>
 
       {isExpanded && (
         <div className="pl-12 pr-3 pb-3">
-          <ItemList collectionId={collection.id} />
+          <ItemList collectionId={collectionId} />
         </div>
       )}
     </div>

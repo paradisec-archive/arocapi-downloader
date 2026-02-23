@@ -45,6 +45,7 @@ export const ItemRow = ({ item }: ItemRowProps) => {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate flex items-center gap-2">
             {item.name}
+            <span className="shrink-0 rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">Item</span>
             {isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
           </div>
           <div className="text-sm italic">{item.id}</div>

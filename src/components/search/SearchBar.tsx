@@ -24,7 +24,7 @@ export const SearchBar = ({ initialQuery = '', className }: SearchBarProps) => {
     (query: string) => {
       if (query.trim()) {
         navigate({
-          to: '/search',
+          to: '/browser',
           search: { q: query.trim(), page: 1 },
         });
       }
