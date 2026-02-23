@@ -1,53 +1,12 @@
-import { mkdir, readdir, stat, statfs } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { formatFileSize } from '~/shared/formatters';
 import type { ExportFileInfo, ExportJobMessage } from '~/shared/types/index';
-import {
-  addJobFailedFile,
-  completeJob,
-  failJob,
-  updateJobDiskStats,
-  updateJobDownloadProgress,
-  updateJobPhase,
-  updateJobTotalSize,
-  updateJobUploadProgress,
-  updateJobZipProgress,
-} from './jobStore';
+import { completeJob, failJob, updateJobDownloadProgress, updateJobPhase, updateJobStreamedBytes, updateJobTotalSize } from './jobStore';
 import { sendDownloadEmail } from './services/email';
-import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate';
-import { generatePresignedUrl, uploadToS3 } from './services/s3';
-import { cleanupWorkDir, cleanupZipFile, createWorkDir, createZipArchive } from './services/zipper';
+import { fetchFileStream, fetchRoCrateMetadata, getEntityMetadata } from './services/rocrate';
+import { generatePresignedUrl, uploadStreamToS3 } from './services/s3';
+import { createStreamingZip } from './services/zipper';
 
 type FilesByItem = Map<string, { itemId: string; collectionId: string; files: ExportFileInfo[] }>;
-
-const getDirectorySize = async (dirPath: string): Promise<number> => {
-  let totalSize = 0;
-  const entries = await readdir(dirPath, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = join(dirPath, entry.name);
-    if (entry.isDirectory()) {
-      totalSize += await getDirectorySize(fullPath);
-    } else {
-      const fileStat = await stat(fullPath);
-      totalSize += fileStat.size;
-    }
-  }
-
-  return totalSize;
-};
-
-const collectDiskStats = async (workDir: string, jobId: string): Promise<void> => {
-  try {
-    const dirSize = await getDirectorySize(workDir);
-    const workDirSizeMB = Math.round(dirSize / 1024 / 1024);
-    const tmpStats = await statfs(tmpdir());
-    const tmpFreeSpaceMB = Math.round((tmpStats.bfree * tmpStats.bsize) / 1024 / 1024);
-    updateJobDiskStats(jobId, workDirSizeMB, tmpFreeSpaceMB);
-  } catch {
-    // Non-critical — skip if stats collection fails
-  }
-};
 
 // Extract a clean directory path from an entity ID (URL)
 // e.g. "https://admin-catalog.nabu-stage.paradisec.org.au/repository/JFTEST/001"
@@ -101,120 +60,100 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
 
   console.log(`Processing job ${jobId}: ${files.length} files for ${email}`);
 
-  const workDir = await createWorkDir(jobId);
+  // Group files by collection/item hierarchy
+  console.log('Grouping files by collection and item...');
+  updateJobPhase(jobId, 'grouping');
+  const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
+  updateJobTotalSize(jobId, totalSize);
+
+  // Streaming phase: fetch → zip → S3 in one pipeline
+  updateJobPhase(jobId, 'downloading');
+  const zip = createStreamingZip();
+
+  const s3Key = `exports/${jobId}.zip`;
+  const uploadPromise = uploadStreamToS3(zip.outputStream, s3Key);
+
+  // Prevent unhandled errors on yazl's outputStream (the error also propagates via uploadPromise)
+  zip.outputStream.on('error', (error) => {
+    console.error('Zip output stream error:', error);
+  });
+
+  // Add RO-Crate metadata for each collection
+  const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
+
+  for (const collectionId of collectionIds) {
+    const collectionPath = extractPathFromId(collectionId);
+    console.log(`Adding RO-Crate metadata for collection: ${collectionId}`);
+    const metadataBuffer = await fetchRoCrateMetadata(collectionId, accessToken);
+    zip.addBuffer(metadataBuffer, `${collectionPath}/ro-crate-metadata.json`);
+  }
+
+  // Register each file lazily — the fetch only happens when yazl is ready to read,
+  // preventing idle connections from being closed by the upstream server.
+  let downloadedCount = 0;
+  let streamedBytes = 0;
+
+  for (const [, { itemId, files: itemFiles }] of filesByItem) {
+    const itemPath = extractPathFromId(itemId);
+
+    // Add RO-Crate metadata for the item
+    console.log(`Adding RO-Crate metadata for item: ${itemId}`);
+    const itemMetadataBuffer = await fetchRoCrateMetadata(itemId, accessToken);
+    zip.addBuffer(itemMetadataBuffer, `${itemPath}/ro-crate-metadata.json`);
+
+    for (const file of itemFiles) {
+      const fileIndex = ++downloadedCount;
+
+      zip.addStreamLazy(
+        async () => {
+          console.log(`Streaming file ${fileIndex}/${files.length}: ${file.filename}`);
+          updateJobDownloadProgress(jobId, fileIndex);
+
+          const fileStream = await fetchFileStream(file.id, accessToken);
+          fileStream.on('end', () => {
+            streamedBytes += file.size;
+            updateJobStreamedBytes(jobId, streamedBytes);
+          });
+
+          return fileStream;
+        },
+        `${itemPath}/${file.filename}`,
+        file.size,
+      );
+    }
+  }
+
+  // Finalize zip and wait for S3 upload to complete.
+  // Any error (failed fetch, mid-stream socket close, upload failure) rejects uploadPromise.
+  zip.finalize();
 
   try {
-    // Group files by collection/item hierarchy
-    console.log('Grouping files by collection and item...');
-    updateJobPhase(jobId, 'grouping');
-    const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
-    updateJobTotalSize(jobId, totalSize);
+    await uploadPromise;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Export pipeline failed: ${message}`, error);
+    failJob(jobId, `Export failed: ${message}`);
+    await sendDownloadEmail({
+      to: email,
+      fileCount: files.length,
+      totalSize: formatFileSize(totalSize),
+    });
 
-    // Save RO-Crate metadata for each collection
-    const collectionIds = new Set([...filesByItem.values()].map(({ collectionId }) => collectionId).filter((id) => id !== 'unknown-collection'));
-
-    for (const collectionId of collectionIds) {
-      const collectionPath = extractPathFromId(collectionId);
-      const collectionDir = join(workDir, collectionPath);
-      await mkdir(collectionDir, { recursive: true });
-
-      console.log(`Downloading RO-Crate metadata for collection: ${collectionId}`);
-      await saveRoCrateMetadata(collectionId, collectionDir, accessToken);
-    }
-
-    // Process each item group
-    updateJobPhase(jobId, 'downloading');
-    let downloadedCount = 0;
-    const failedFiles: { filename: string; error: string }[] = [];
-
-    for (const [, { itemId, files: itemFiles }] of filesByItem) {
-      // Create directory structure using clean path from item ID
-      // e.g. "https://example.com/repository/COLL/001" -> "example.com/COLL/001"
-      const itemPath = extractPathFromId(itemId);
-      const itemDir = join(workDir, itemPath);
-      await mkdir(itemDir, { recursive: true });
-
-      console.log(`Processing item ${itemId}: ${itemFiles.length} files -> ${itemPath}`);
-
-      // Download RO-Crate metadata for the item
-      console.log(`Downloading RO-Crate metadata for item: ${itemId}`);
-      await saveRoCrateMetadata(itemId, itemDir, accessToken);
-
-      // Download each file into the item directory
-      for (const file of itemFiles) {
-        downloadedCount++;
-        console.log(`Downloading file ${downloadedCount}/${files.length}: ${file.filename}`);
-        updateJobDownloadProgress(jobId, downloadedCount);
-
-        try {
-          await downloadFile(file.id, itemDir, file.filename, accessToken);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          console.error(`Failed to download file ${file.id}:`, error);
-          failedFiles.push({ filename: file.filename, error: message });
-          addJobFailedFile(jobId, file.filename, message);
-        }
-
-        if (downloadedCount % 5 === 0) {
-          await collectDiskStats(workDir, jobId);
-        }
-      }
-    }
-
-    const successCount = files.length - failedFiles.length;
-
-    if (failedFiles.length > 0) {
-      console.warn(`${failedFiles.length}/${files.length} files failed to download`);
-    }
-
-    if (successCount > 0) {
-      console.log(`Creating zip archive for job ${jobId}`);
-      updateJobPhase(jobId, 'zipping');
-      const workDirSize = await getDirectorySize(workDir);
-      const zipPath = await createZipArchive(
-        workDir,
-        jobId,
-        (processed, total) => {
-          updateJobZipProgress(jobId, processed, total);
-        },
-        workDirSize,
-      );
-
-      const s3Key = `exports/${jobId}.zip`;
-      console.log(`Uploading to S3: ${s3Key}`);
-      updateJobPhase(jobId, 'uploading');
-      await uploadToS3(zipPath, s3Key, (loaded, total) => {
-        updateJobUploadProgress(jobId, loaded, total);
-      });
-
-      console.log(`Generating presigned URL`);
-      const downloadUrl = await generatePresignedUrl(s3Key);
-
-      console.log(`Sending email to ${email}`);
-      updateJobPhase(jobId, 'emailing');
-      await sendDownloadEmail({
-        to: email,
-        downloadUrl,
-        fileCount: successCount,
-        totalSize: formatFileSize(totalSize),
-        missingFiles: failedFiles.length > 0 ? failedFiles : undefined,
-      });
-
-      completeJob(jobId, downloadUrl);
-    } else {
-      console.log(`All files failed — sending failure email to ${email}`);
-      failJob(jobId, 'All files failed to download');
-      await sendDownloadEmail({
-        to: email,
-        fileCount: files.length,
-        totalSize: formatFileSize(totalSize),
-        missingFiles: failedFiles,
-      });
-    }
-
-    console.log(`Job ${jobId} completed${failedFiles.length > 0 ? ` with ${failedFiles.length} failed file(s)` : ' successfully'}`);
-  } finally {
-    await cleanupWorkDir(workDir);
-    await cleanupZipFile(jobId);
+    return;
   }
+
+  console.log('Generating presigned URL');
+  const downloadUrl = await generatePresignedUrl(s3Key);
+
+  console.log(`Sending email to ${email}`);
+  updateJobPhase(jobId, 'emailing');
+  await sendDownloadEmail({
+    to: email,
+    downloadUrl,
+    fileCount: files.length,
+    totalSize: formatFileSize(totalSize),
+  });
+
+  completeJob(jobId, downloadUrl);
+  console.log(`Job ${jobId} completed successfully`);
 };

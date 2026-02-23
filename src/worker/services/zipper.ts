@@ -1,67 +1,34 @@
-import { createWriteStream } from 'node:fs';
-import { mkdir, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import archiver from 'archiver';
+import type { Readable } from 'node:stream';
+import { ZipFile } from 'yazl';
 
-export const createWorkDir = async (jobId: string): Promise<string> => {
-  const workDir = join(tmpdir(), 'rocrate-downloads', jobId);
-  await mkdir(workDir, { recursive: true });
+type GetStreamFn = () => Promise<Readable>;
 
-  return workDir;
+type StreamingZip = {
+  outputStream: Readable;
+  addBuffer: (data: Buffer, path: string) => void;
+  addStreamLazy: (getStream: GetStreamFn, path: string, size: number) => void;
+  finalize: () => void;
 };
 
-export const cleanupWorkDir = async (workDir: string): Promise<void> => {
-  try {
-    await rm(workDir, { recursive: true, force: true });
-  } catch (error) {
-    console.error('Error cleaning up work directory:', error);
-  }
-};
+export const createStreamingZip = (): StreamingZip => {
+  const zipFile = new ZipFile();
 
-export const cleanupZipFile = async (jobId: string): Promise<void> => {
-  try {
-    await rm(join(tmpdir(), `${jobId}.zip`), { force: true });
-  } catch (error) {
-    console.error('Error cleaning up zip file:', error);
-  }
-};
-
-type ZipProgressCallback = (processedBytes: number, totalBytes: number) => void;
-
-export const createZipArchive = async (sourceDir: string, jobId: string, onProgress?: ZipProgressCallback, knownTotalBytes?: number): Promise<string> => {
-  const zipPath = join(tmpdir(), `${jobId}.zip`);
-  const output = createWriteStream(zipPath);
-  const archive = archiver('zip', {
-    zlib: { level: 6 },
-  });
-
-  return new Promise((resolve, reject) => {
-    output.on('close', () => {
-      console.log(`Zip archive created: ${archive.pointer()} bytes`);
-      resolve(zipPath);
-    });
-
-    archive.on('error', (error) => {
-      reject(error);
-    });
-
-    archive.on('warning', (warning) => {
-      if (warning.code === 'ENOENT') {
-        console.warn('Archiver warning:', warning);
-      } else {
-        reject(warning);
-      }
-    });
-
-    if (onProgress) {
-      archive.on('progress', (progress) => {
-        onProgress(progress.fs.processedBytes, knownTotalBytes ?? progress.fs.totalBytes);
+  return {
+    // yazl's outputStream is a PassThrough at runtime, but typed as NodeJS.ReadableStream
+    outputStream: zipFile.outputStream as unknown as Readable,
+    addBuffer: (data, path) => {
+      zipFile.addBuffer(data, path);
+    },
+    addStreamLazy: (getStream, path, size) => {
+      zipFile.addReadStreamLazy(path, { size }, (cb) => {
+        getStream().then(
+          (stream) => cb(null, stream as unknown as NodeJS.ReadableStream),
+          (error) => cb(error, null as unknown as NodeJS.ReadableStream),
+        );
       });
-    }
-
-    archive.pipe(output);
-    archive.directory(sourceDir, false);
-    archive.finalize();
-  });
+    },
+    finalize: () => {
+      zipFile.end();
+    },
+  };
 };

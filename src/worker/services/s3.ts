@@ -1,5 +1,4 @@
-import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import type { Readable } from 'node:stream';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -8,27 +7,16 @@ import { PRESIGNED_URL_EXPIRY_SECONDS } from '~/shared/constants';
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 
-type UploadProgressCallback = (bytesLoaded: number, bytesTotal: number) => void;
-
-export const uploadToS3 = async (filePath: string, key: string, onProgress?: UploadProgressCallback): Promise<void> => {
-  const fileStats = await stat(filePath);
-  const fileStream = createReadStream(filePath);
-
+export const uploadStreamToS3 = async (stream: Readable, key: string): Promise<void> => {
   const upload = new Upload({
     client: s3Client,
     params: {
       Bucket: config.S3_BUCKET,
       Key: key,
-      Body: fileStream,
+      Body: stream,
       ContentType: 'application/zip',
     },
   });
-
-  if (onProgress) {
-    upload.on('httpUploadProgress', (progress) => {
-      onProgress(progress.loaded ?? 0, fileStats.size);
-    });
-  }
 
   await upload.done();
 };

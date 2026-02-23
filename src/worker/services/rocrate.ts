@@ -1,8 +1,4 @@
-import { createWriteStream } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
 import { config } from '~/server/services/config';
 import type { Entity } from '~/shared/types/index';
 
@@ -26,7 +22,7 @@ const buildHeaders = (token?: string, accept = 'application/json'): Record<strin
   return headers;
 };
 
-export const downloadFile = async (fileId: string, destDir: string, filename: string, token?: string): Promise<string> => {
+export const fetchFileStream = async (fileId: string, token?: string): Promise<Readable> => {
   const url = buildUrl(`/file/${encodeURIComponent(fileId)}`);
 
   const response = await fetch(url.toString(), {
@@ -41,13 +37,8 @@ export const downloadFile = async (fileId: string, destDir: string, filename: st
     throw new Error('Response body is null');
   }
 
-  const destPath = join(destDir, filename);
-  const fileStream = createWriteStream(destPath);
-
   // @ts-expect-error - Type mismatch between global ReadableStream and Node's stream/web ReadableStream
-  await pipeline(Readable.fromWeb(response.body), fileStream);
-
-  return destPath;
+  return Readable.fromWeb(response.body);
 };
 
 export const getEntityMetadata = async (entityId: string, token?: string): Promise<Entity> => {
@@ -78,10 +69,8 @@ const getEntityRoCrate = async (entityId: string, token?: string): Promise<unkno
   return response.json();
 };
 
-export const saveRoCrateMetadata = async (entityId: string, destDir: string, token?: string): Promise<string> => {
+export const fetchRoCrateMetadata = async (entityId: string, token?: string): Promise<Buffer> => {
   const rocrate = await getEntityRoCrate(entityId, token);
-  const destPath = join(destDir, 'ro-crate-metadata.json');
-  await writeFile(destPath, JSON.stringify(rocrate, null, 2));
 
-  return destPath;
+  return Buffer.from(JSON.stringify(rocrate, null, 2));
 };

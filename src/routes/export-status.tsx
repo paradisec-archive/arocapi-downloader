@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { AlertTriangle, CheckCircle, Download, HardDrive, Info, Loader2, MemoryStick, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Download, Info, Loader2, MemoryStick, XCircle } from 'lucide-react';
 import { z } from 'zod';
 import { buttonVariants } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
@@ -19,15 +19,13 @@ export const Route = createFileRoute('/export-status')({
 
 const PHASE_LABELS: Record<JobPhase, string> = {
   grouping: 'Organising files',
-  downloading: 'Downloading files',
-  zipping: 'Creating archive',
-  uploading: 'Uploading to storage',
+  downloading: 'Processing files',
   emailing: 'Sending email',
   complete: 'Complete',
   failed: 'Failed',
 };
 
-const PHASE_ORDER: JobPhase[] = ['grouping', 'downloading', 'zipping', 'uploading', 'emailing', 'complete'];
+const PHASE_ORDER: JobPhase[] = ['grouping', 'downloading', 'emailing', 'complete'];
 
 const PhaseStepperItem = ({ phase, currentPhase }: { phase: JobPhase; currentPhase: JobPhase }) => {
   const currentIdx = PHASE_ORDER.indexOf(currentPhase);
@@ -100,7 +98,7 @@ const FailedFilesList = ({ files }: { files: Array<{ filename: string; error: st
 };
 
 const ResourceStats = ({ status }: { status: JobStatus }) => (
-  <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+  <div className="text-xs text-muted-foreground">
     <div className="space-y-1">
       <div className="flex items-center gap-1 font-medium">
         <MemoryStick className="h-3 w-3" />
@@ -110,14 +108,6 @@ const ResourceStats = ({ status }: { status: JobStatus }) => (
         Heap: {status.memory.heapUsedMB} / {status.memory.heapTotalMB} MB
       </div>
       <div>RSS: {status.memory.rssMB} MB</div>
-    </div>
-    <div className="space-y-1">
-      <div className="flex items-center gap-1 font-medium">
-        <HardDrive className="h-3 w-3" />
-        Disk
-      </div>
-      <div>Work dir: {status.disk.workDirSizeMB} MB</div>
-      <div>Tmp free: {status.disk.tmpFreeSpaceMB} MB</div>
     </div>
   </div>
 );
@@ -233,13 +223,10 @@ function ExportStatusPage() {
           </div>
 
           {status.phase === 'downloading' && (
-            <ProgressBar loaded={status.downloadedFiles} total={status.totalFiles} label={`${status.downloadedFiles} / ${status.totalFiles} files`} />
-          )}
-
-          {status.phase === 'zipping' && <ProgressBar loaded={status.zipBytesProcessed} total={status.zipBytesTotal} label="Compressing files" showBytes />}
-
-          {status.phase === 'uploading' && (
-            <ProgressBar loaded={status.uploadBytesLoaded} total={status.uploadBytesTotal} label="Uploading archive" showBytes />
+            <div className="space-y-3">
+              <ProgressBar loaded={status.downloadedFiles} total={status.totalFiles} label={`${status.downloadedFiles} / ${status.totalFiles} files`} />
+              <ProgressBar loaded={status.streamedBytes} total={status.totalSize} label="Streamed" showBytes />
+            </div>
           )}
 
           <FailedFilesList files={status.failedFiles} />

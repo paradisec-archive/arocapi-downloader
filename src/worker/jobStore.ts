@@ -7,16 +7,11 @@ type MutableJobState = {
   downloadedFiles: number;
   failedFiles: Array<{ filename: string; error: string }>;
   totalSize: number;
+  streamedBytes: number;
   downloadUrl?: string;
   errorMessage?: string;
   startedAt: string;
   completedAt?: string;
-  zipBytesProcessed: number;
-  zipBytesTotal: number;
-  uploadBytesLoaded: number;
-  uploadBytesTotal: number;
-  workDirSizeMB: number;
-  tmpFreeSpaceMB: number;
 };
 
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
@@ -52,13 +47,8 @@ export const initJob = (jobId: string, totalFiles: number, totalSize: number): v
     downloadedFiles: 0,
     failedFiles: [],
     totalSize,
+    streamedBytes: 0,
     startedAt: new Date().toISOString(),
-    zipBytesProcessed: 0,
-    zipBytesTotal: 0,
-    uploadBytesLoaded: 0,
-    uploadBytesTotal: 0,
-    workDirSizeMB: 0,
-    tmpFreeSpaceMB: 0,
   });
 };
 
@@ -76,13 +66,6 @@ export const updateJobDownloadProgress = (jobId: string, downloadedFiles: number
   }
 };
 
-export const addJobFailedFile = (jobId: string, filename: string, error: string): void => {
-  const job = getStore().get(jobId);
-  if (job) {
-    job.failedFiles.push({ filename, error });
-  }
-};
-
 export const updateJobTotalSize = (jobId: string, totalSize: number): void => {
   const job = getStore().get(jobId);
   if (job) {
@@ -90,27 +73,10 @@ export const updateJobTotalSize = (jobId: string, totalSize: number): void => {
   }
 };
 
-export const updateJobDiskStats = (jobId: string, workDirSizeMB: number, tmpFreeSpaceMB: number): void => {
+export const updateJobStreamedBytes = (jobId: string, streamedBytes: number): void => {
   const job = getStore().get(jobId);
   if (job) {
-    job.workDirSizeMB = workDirSizeMB;
-    job.tmpFreeSpaceMB = tmpFreeSpaceMB;
-  }
-};
-
-export const updateJobZipProgress = (jobId: string, bytesProcessed: number, bytesTotal: number): void => {
-  const job = getStore().get(jobId);
-  if (job) {
-    job.zipBytesProcessed = bytesProcessed;
-    job.zipBytesTotal = bytesTotal;
-  }
-};
-
-export const updateJobUploadProgress = (jobId: string, bytesLoaded: number, bytesTotal: number): void => {
-  const job = getStore().get(jobId);
-  if (job) {
-    job.uploadBytesLoaded = bytesLoaded;
-    job.uploadBytesTotal = bytesTotal;
+    job.streamedBytes = streamedBytes;
   }
 };
 
@@ -147,19 +113,12 @@ export const getJobStatus = (jobId: string): JobStatus | null => {
     downloadedFiles: job.downloadedFiles,
     failedFiles: job.failedFiles,
     totalSize: job.totalSize,
+    streamedBytes: job.streamedBytes,
     startedAt: job.startedAt,
-    zipBytesProcessed: job.zipBytesProcessed,
-    zipBytesTotal: job.zipBytesTotal,
-    uploadBytesLoaded: job.uploadBytesLoaded,
-    uploadBytesTotal: job.uploadBytesTotal,
     memory: {
       heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
       heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
       rssMB: Math.round(mem.rss / 1024 / 1024),
-    },
-    disk: {
-      workDirSizeMB: job.workDirSizeMB,
-      tmpFreeSpaceMB: job.tmpFreeSpaceMB,
     },
   };
 
