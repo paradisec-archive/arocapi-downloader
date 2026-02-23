@@ -15,6 +15,10 @@ export type JobStatus = {
   errorMessage?: string;
   startedAt: string;
   completedAt?: string;
+  zipBytesProcessed: number;
+  zipBytesTotal: number;
+  uploadBytesLoaded: number;
+  uploadBytesTotal: number;
   memory: { heapUsedMB: number; heapTotalMB: number; rssMB: number };
   disk: { workDirSizeMB: number; tmpFreeSpaceMB: number };
 };

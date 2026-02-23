@@ -3,7 +3,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { formatFileSize } from '~/shared/formatters';
 import type { ExportFileInfo, ExportJobMessage } from '~/shared/types/index';
-import { addJobFailedFile, completeJob, failJob, updateJobDiskStats, updateJobDownloadProgress, updateJobPhase, updateJobTotalSize } from './jobStore';
+import {
+  addJobFailedFile,
+  completeJob,
+  failJob,
+  updateJobDiskStats,
+  updateJobDownloadProgress,
+  updateJobPhase,
+  updateJobTotalSize,
+  updateJobUploadProgress,
+  updateJobZipProgress,
+} from './jobStore';
 import { sendDownloadEmail } from './services/email';
 import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate';
 import { generatePresignedUrl, uploadToS3 } from './services/s3';
@@ -160,12 +170,22 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
     if (successCount > 0) {
       console.log(`Creating zip archive for job ${jobId}`);
       updateJobPhase(jobId, 'zipping');
-      const zipPath = await createZipArchive(workDir, jobId);
+      const workDirSize = await getDirectorySize(workDir);
+      const zipPath = await createZipArchive(
+        workDir,
+        jobId,
+        (processed, total) => {
+          updateJobZipProgress(jobId, processed, total);
+        },
+        workDirSize,
+      );
 
       const s3Key = `exports/${jobId}.zip`;
       console.log(`Uploading to S3: ${s3Key}`);
       updateJobPhase(jobId, 'uploading');
-      await uploadToS3(zipPath, s3Key);
+      await uploadToS3(zipPath, s3Key, (loaded, total) => {
+        updateJobUploadProgress(jobId, loaded, total);
+      });
 
       console.log(`Generating presigned URL`);
       const downloadUrl = await generatePresignedUrl(s3Key);

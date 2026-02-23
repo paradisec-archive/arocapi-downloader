@@ -51,21 +51,30 @@ const PhaseStepperItem = ({ phase, currentPhase }: { phase: JobPhase; currentPha
   );
 };
 
-const ProgressBar = ({ status }: { status: JobStatus }) => {
-  const percent = status.totalFiles > 0 ? Math.round((status.downloadedFiles / status.totalFiles) * 100) : 0;
+type ProgressBarProps = {
+  loaded: number;
+  total: number;
+  label: string;
+  showBytes?: boolean;
+};
+
+const ProgressBar = ({ loaded, total, label, showBytes = false }: ProgressBarProps) => {
+  const percent = total > 0 ? Math.round((loaded / total) * 100) : 0;
 
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm text-muted-foreground">
-        <span>
-          {status.downloadedFiles} / {status.totalFiles} files
-        </span>
+        <span>{label}</span>
         <span>{percent}%</span>
       </div>
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div className="h-full rounded-full bg-blue-500 transition-all duration-300" style={{ width: `${percent}%` }} />
       </div>
-      {status.totalSize > 0 && <div className="text-xs text-muted-foreground">Total size: {formatFileSize(status.totalSize)}</div>}
+      {showBytes && total > 0 && (
+        <div className="text-xs text-muted-foreground">
+          {formatFileSize(loaded)} / {formatFileSize(total)}
+        </div>
+      )}
     </div>
   );
 };
@@ -223,7 +232,15 @@ function ExportStatusPage() {
             ))}
           </div>
 
-          {status.phase === 'downloading' && <ProgressBar status={status} />}
+          {status.phase === 'downloading' && (
+            <ProgressBar loaded={status.downloadedFiles} total={status.totalFiles} label={`${status.downloadedFiles} / ${status.totalFiles} files`} />
+          )}
+
+          {status.phase === 'zipping' && <ProgressBar loaded={status.zipBytesProcessed} total={status.zipBytesTotal} label="Compressing files" showBytes />}
+
+          {status.phase === 'uploading' && (
+            <ProgressBar loaded={status.uploadBytesLoaded} total={status.uploadBytesTotal} label="Uploading archive" showBytes />
+          )}
 
           <FailedFilesList files={status.failedFiles} />
 

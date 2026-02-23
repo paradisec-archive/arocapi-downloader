@@ -19,7 +19,9 @@ export const cleanupWorkDir = async (workDir: string): Promise<void> => {
   }
 };
 
-export const createZipArchive = async (sourceDir: string, jobId: string): Promise<string> => {
+type ZipProgressCallback = (processedBytes: number, totalBytes: number) => void;
+
+export const createZipArchive = async (sourceDir: string, jobId: string, onProgress?: ZipProgressCallback, knownTotalBytes?: number): Promise<string> => {
   const zipPath = join(tmpdir(), `${jobId}.zip`);
   const output = createWriteStream(zipPath);
   const archive = archiver('zip', {
@@ -43,6 +45,12 @@ export const createZipArchive = async (sourceDir: string, jobId: string): Promis
         reject(warning);
       }
     });
+
+    if (onProgress) {
+      archive.on('progress', (progress) => {
+        onProgress(progress.fs.processedBytes, knownTotalBytes ?? progress.fs.totalBytes);
+      });
+    }
 
     archive.pipe(output);
     archive.directory(sourceDir, false);

@@ -1,25 +1,36 @@
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from '~/server/services/config';
 import { PRESIGNED_URL_EXPIRY_SECONDS } from '~/shared/constants';
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 
-export const uploadToS3 = async (filePath: string, key: string): Promise<void> => {
+type UploadProgressCallback = (bytesLoaded: number, bytesTotal: number) => void;
+
+export const uploadToS3 = async (filePath: string, key: string, onProgress?: UploadProgressCallback): Promise<void> => {
   const fileStats = await stat(filePath);
   const fileStream = createReadStream(filePath);
 
-  const command = new PutObjectCommand({
-    Bucket: config.S3_BUCKET,
-    Key: key,
-    Body: fileStream,
-    ContentLength: fileStats.size,
-    ContentType: 'application/zip',
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: config.S3_BUCKET,
+      Key: key,
+      Body: fileStream,
+      ContentType: 'application/zip',
+    },
   });
 
-  await s3Client.send(command);
+  if (onProgress) {
+    upload.on('httpUploadProgress', (progress) => {
+      onProgress(progress.loaded ?? 0, fileStats.size);
+    });
+  }
+
+  await upload.done();
 };
 
 export const generatePresignedUrl = async (key: string): Promise<string> => {

@@ -11,6 +11,10 @@ type MutableJobState = {
   errorMessage?: string;
   startedAt: string;
   completedAt?: string;
+  zipBytesProcessed: number;
+  zipBytesTotal: number;
+  uploadBytesLoaded: number;
+  uploadBytesTotal: number;
   workDirSizeMB: number;
   tmpFreeSpaceMB: number;
 };
@@ -49,6 +53,10 @@ export const initJob = (jobId: string, totalFiles: number, totalSize: number): v
     failedFiles: [],
     totalSize,
     startedAt: new Date().toISOString(),
+    zipBytesProcessed: 0,
+    zipBytesTotal: 0,
+    uploadBytesLoaded: 0,
+    uploadBytesTotal: 0,
     workDirSizeMB: 0,
     tmpFreeSpaceMB: 0,
   });
@@ -90,6 +98,22 @@ export const updateJobDiskStats = (jobId: string, workDirSizeMB: number, tmpFree
   }
 };
 
+export const updateJobZipProgress = (jobId: string, bytesProcessed: number, bytesTotal: number): void => {
+  const job = getStore().get(jobId);
+  if (job) {
+    job.zipBytesProcessed = bytesProcessed;
+    job.zipBytesTotal = bytesTotal;
+  }
+};
+
+export const updateJobUploadProgress = (jobId: string, bytesLoaded: number, bytesTotal: number): void => {
+  const job = getStore().get(jobId);
+  if (job) {
+    job.uploadBytesLoaded = bytesLoaded;
+    job.uploadBytesTotal = bytesTotal;
+  }
+};
+
 export const completeJob = (jobId: string, downloadUrl: string): void => {
   const job = getStore().get(jobId);
   if (job) {
@@ -124,6 +148,10 @@ export const getJobStatus = (jobId: string): JobStatus | null => {
     failedFiles: job.failedFiles,
     totalSize: job.totalSize,
     startedAt: job.startedAt,
+    zipBytesProcessed: job.zipBytesProcessed,
+    zipBytesTotal: job.zipBytesTotal,
+    uploadBytesLoaded: job.uploadBytesLoaded,
+    uploadBytesTotal: job.uploadBytesTotal,
     memory: {
       heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
       heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
