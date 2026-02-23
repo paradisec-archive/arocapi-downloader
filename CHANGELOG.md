@@ -1,3 +1,9 @@
+## [1.7.1](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.7.0...v1.7.1) (2026-02-23)
+
+### Bug Fixes
+
+* **export:** clean up zip file after job completes ([247e053](https://github.com/paradisec-archive/arocapi-downloader/commit/247e053df122ae6708936b3bbcd0da8488aad6d0))
+
 ## [1.7.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.6.0...v1.7.0) (2026-02-23)
 
 ### Features
