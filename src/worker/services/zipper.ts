@@ -19,6 +19,14 @@ export const cleanupWorkDir = async (workDir: string): Promise<void> => {
   }
 };
 
+export const cleanupZipFile = async (jobId: string): Promise<void> => {
+  try {
+    await rm(join(tmpdir(), `${jobId}.zip`), { force: true });
+  } catch (error) {
+    console.error('Error cleaning up zip file:', error);
+  }
+};
+
 type ZipProgressCallback = (processedBytes: number, totalBytes: number) => void;
 
 export const createZipArchive = async (sourceDir: string, jobId: string, onProgress?: ZipProgressCallback, knownTotalBytes?: number): Promise<string> => {

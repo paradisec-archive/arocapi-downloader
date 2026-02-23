@@ -17,7 +17,7 @@ import {
 import { sendDownloadEmail } from './services/email';
 import { downloadFile, getEntityMetadata, saveRoCrateMetadata } from './services/rocrate';
 import { generatePresignedUrl, uploadToS3 } from './services/s3';
-import { cleanupWorkDir, createWorkDir, createZipArchive } from './services/zipper';
+import { cleanupWorkDir, cleanupZipFile, createWorkDir, createZipArchive } from './services/zipper';
 
 type FilesByItem = Map<string, { itemId: string; collectionId: string; files: ExportFileInfo[] }>;
 
@@ -215,5 +215,6 @@ export const processJob = async (job: ExportJobMessage): Promise<void> => {
     console.log(`Job ${jobId} completed${failedFiles.length > 0 ? ` with ${failedFiles.length} failed file(s)` : ' successfully'}`);
   } finally {
     await cleanupWorkDir(workDir);
+    await cleanupZipFile(jobId);
   }
 };
