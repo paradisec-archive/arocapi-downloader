@@ -1,10 +1,13 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Checkbox } from '~/components/ui/checkbox';
+import { Input } from '~/components/ui/input';
 import type { FacetBucket } from '~/shared/types/search';
 
 const INITIAL_VISIBLE = 5;
+
+const compareNames = (a: FacetBucket, b: FacetBucket) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 
 type FacetCategorySectionProps = {
   label: string;
@@ -16,6 +19,7 @@ type FacetCategorySectionProps = {
 export const FacetCategorySection = ({ label, buckets, selectedValues, onToggle }: FacetCategorySectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isShowingAll, setIsShowingAll] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   const sortedBuckets = useMemo(() => {
     const selected: FacetBucket[] = [];
@@ -36,11 +40,27 @@ export const FacetCategorySection = ({ label, buckets, selectedValues, onToggle 
       }
     }
 
+    selected.sort(compareNames);
+    unselected.sort(compareNames);
+
     return [...selected, ...unselected];
   }, [buckets, selectedValues]);
 
-  const visibleBuckets = isShowingAll ? sortedBuckets : sortedBuckets.slice(0, INITIAL_VISIBLE);
-  const hiddenCount = sortedBuckets.length - INITIAL_VISIBLE;
+  const hasSearch = sortedBuckets.length > INITIAL_VISIBLE;
+  const isSearching = searchText.length > 0;
+
+  const filteredBuckets = useMemo(() => {
+    if (!isSearching) {
+      return sortedBuckets;
+    }
+
+    const needle = searchText.toLowerCase();
+
+    return sortedBuckets.filter((bucket) => bucket.name.toLowerCase().includes(needle));
+  }, [sortedBuckets, searchText, isSearching]);
+
+  const visibleBuckets = isSearching || isShowingAll ? filteredBuckets : filteredBuckets.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = filteredBuckets.length - INITIAL_VISIBLE;
 
   return (
     <div className="border-b border-border pb-3">
@@ -55,6 +75,18 @@ export const FacetCategorySection = ({ label, buckets, selectedValues, onToggle 
 
       {isExpanded && (
         <div className="space-y-1.5 pt-1">
+          {hasSearch && (
+            <div className="relative mb-1">
+              <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={`Search ${label.toLowerCase()}...`}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="h-7 pl-7 text-xs"
+              />
+            </div>
+          )}
+
           {visibleBuckets.map((bucket) => {
             const isChecked = selectedValues.includes(bucket.name);
             const id = `facet-${label}-${bucket.name}`;
@@ -68,11 +100,13 @@ export const FacetCategorySection = ({ label, buckets, selectedValues, onToggle 
             );
           })}
 
-          {hiddenCount > 0 && (
+          {!isSearching && hiddenCount > 0 && (
             <button type="button" className="px-1 text-xs text-muted-foreground hover:text-foreground" onClick={() => setIsShowingAll(!isShowingAll)}>
               {isShowingAll ? 'Show fewer' : `Show ${hiddenCount} more`}
             </button>
           )}
+
+          {isSearching && filteredBuckets.length === 0 && <p className="px-1 text-xs text-muted-foreground">No matches</p>}
         </div>
       )}
     </div>

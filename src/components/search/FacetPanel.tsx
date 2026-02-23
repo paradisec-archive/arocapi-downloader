@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
 import type { FacetFilters, Facets } from '~/shared/types/search';
 
@@ -14,6 +17,25 @@ const FACET_LABEL_MAP: Record<string, string> = {
 
 const FACET_ORDER = ['collection_title', 'languages_with_code', 'countries', 'collector_name', 'full_identifier', 'entity_type'];
 
+const filtersEqual = (a: FacetFilters, b: FacetFilters): boolean => {
+  const aKeys = Object.keys(a).filter((k) => (a[k]?.length ?? 0) > 0);
+  const bKeys = Object.keys(b).filter((k) => (b[k]?.length ?? 0) > 0);
+
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+
+  return aKeys.every((key) => {
+    const aVals = a[key] ?? [];
+    const bVals = b[key] ?? [];
+    if (aVals.length !== bVals.length) {
+      return false;
+    }
+
+    return aVals.every((v) => bVals.includes(v));
+  });
+};
+
 type FacetPanelProps = {
   facets?: Facets | undefined;
   filters: FacetFilters;
@@ -22,23 +44,42 @@ type FacetPanelProps = {
 };
 
 export const FacetPanel = ({ facets, filters, isFetching, onFiltersChange }: FacetPanelProps) => {
+  const [pendingFilters, setPendingFilters] = useState<FacetFilters>(filters);
+
+  // Sync pending state when the applied filters change externally
+  // (e.g. badge removal, navigation)
+  useEffect(() => {
+    setPendingFilters(filters);
+  }, [filters]);
+
   const hasActiveFilters = Object.values(filters).some((values) => values.length > 0);
+  const hasPendingChanges = useMemo(() => !filtersEqual(pendingFilters, filters), [pendingFilters, filters]);
 
-  const handleToggle = (key: string, value: string) => {
-    const current = filters[key] ?? [];
-    const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+  const handleToggle = useCallback((key: string, value: string) => {
+    setPendingFilters((prev) => {
+      const current = prev[key] ?? [];
+      const updated = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
 
-    const newFilters = { ...filters, [key]: updated };
+      const next = { ...prev, [key]: updated };
 
-    // Remove empty arrays
-    if (updated.length === 0) {
-      delete newFilters[key];
-    }
+      if (updated.length === 0) {
+        delete next[key];
+      }
 
-    onFiltersChange(newFilters);
+      return next;
+    });
+  }, []);
+
+  const handleApply = () => {
+    onFiltersChange(pendingFilters);
+  };
+
+  const handleReset = () => {
+    setPendingFilters(filters);
   };
 
   const handleClearAll = () => {
+    setPendingFilters({});
     onFiltersChange({});
   };
 
@@ -47,6 +88,17 @@ export const FacetPanel = ({ facets, filters, isFetching, onFiltersChange }: Fac
   if (!facets && !hasActiveFilters) {
     return null;
   }
+
+  const applyResetButtons = hasPendingChanges && (
+    <div className="flex gap-2 pt-2">
+      <Button size="sm" className="flex-1" onClick={handleApply}>
+        Apply
+      </Button>
+      <Button size="sm" variant="outline" className="flex-1" onClick={handleReset}>
+        Reset
+      </Button>
+    </div>
+  );
 
   return (
     <div className={cn('space-y-1', isFetching && 'opacity-60 transition-opacity')}>
@@ -59,15 +111,19 @@ export const FacetPanel = ({ facets, filters, isFetching, onFiltersChange }: Fac
         )}
       </div>
 
+      {applyResetButtons}
+
       {orderedKeys.map((key) => (
         <FacetCategorySection
           key={key}
           label={FACET_LABEL_MAP[key] ?? key}
           buckets={facets?.[key] ?? []}
-          selectedValues={filters[key] ?? []}
+          selectedValues={pendingFilters[key] ?? []}
           onToggle={(value) => handleToggle(key, value)}
         />
       ))}
+
+      {applyResetButtons}
     </div>
   );
 };
