@@ -1,3 +1,9 @@
+## [1.8.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.7.1...v1.8.0) (2026-02-23)
+
+### Features
+
+* **export:** replace disk-based pipeline with streaming zip to S3 ([7da70b1](https://github.com/paradisec-archive/arocapi-downloader/commit/7da70b11a8f937569499fbd14b52aec1523ee5bd))
+
 ## [1.7.1](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.7.0...v1.7.1) (2026-02-23)
 
 ### Bug Fixes
