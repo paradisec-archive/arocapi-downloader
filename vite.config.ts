@@ -18,6 +18,14 @@ export default defineConfig({
     // react's vite plugin must come after start's vite plugin
     viteReact(),
     tailwindcss(),
-    nitro(),
+    nitro({
+      // yazl and buffer-crc32 must be externalised to avoid CJS/ESM interop
+      // issues where Rollup wraps buffer-crc32's default export in a namespace
+      // object, breaking crc32.unsigned() calls
+      externals: {
+        inline: [],
+        external: ['yazl', 'buffer-crc32'],
+      },
+    }),
   ],
 });
