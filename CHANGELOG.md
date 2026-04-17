@@ -1,3 +1,14 @@
+## [1.9.0](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.8.2...v1.9.0) (2026-04-17)
+
+### Features
+
+* **export:** include directories for items without essences ([db654d6](https://github.com/paradisec-archive/arocapi-downloader/commit/db654d6ae2bc25f002c9f9a71d717740b2b09e34))
+
+### Bug Fixes
+
+* **browser:** paginate all items and files when exporting ([f522b75](https://github.com/paradisec-archive/arocapi-downloader/commit/f522b756856b8d3bfe132ee6e01c19b9ae3f28ce))
+* harden pnpm ([e9b514e](https://github.com/paradisec-archive/arocapi-downloader/commit/e9b514e60e6e883112cf3134715bfc3c09766266))
+
 ## [1.8.2](https://github.com/paradisec-archive/arocapi-downloader/compare/v1.8.1...v1.8.2) (2026-02-24)
 
 ### Bug Fixes
