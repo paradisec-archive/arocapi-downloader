@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { getCookieFromRequest, serializeCookie } from '~/server/services/cookies';
-import { getLogoutUrl } from '~/server/services/oidc';
+import { getCookieFromRequest, serializeCookie } from '#/server/services/cookies.ts';
+import { getLogoutUrl } from '#/server/services/oidc.ts';
 
 export const Route = createFileRoute('/api/auth/logout')({
   server: {

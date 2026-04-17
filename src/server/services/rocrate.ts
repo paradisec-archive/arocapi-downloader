@@ -1,5 +1,5 @@
-import type { Entity, PaginatedEntitiesResponse, PaginatedFilesResponse, RoCrateFile, SearchRequest, SearchResponse } from '~/shared/types/index';
-import { config } from './config';
+import type { Entity, PaginatedEntitiesResponse, PaginatedFilesResponse, RoCrateFile, SearchRequest, SearchResponse } from '#/shared/types/index.ts';
+import { config } from './config.ts';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 

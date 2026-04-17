@@ -1,5 +1,5 @@
 import { atom, useAtomValue, useSetAtom } from 'jotai';
-import type { AuthUser } from '~/shared/types/auth';
+import type { AuthUser } from '#/shared/types/auth.ts';
 
 // Primitive atoms
 const userAtom = atom<AuthUser | null>(null);

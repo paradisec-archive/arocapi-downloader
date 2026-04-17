@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getItemsInCollection } from '~/server/functions/collections';
-import { useSelectionStore } from '~/store/selectionStore';
+import { getItemsInCollection } from '#/server/functions/collections.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
 
 export const useItems = (collectionId: string, enabled = true, limit = 50, offset = 0) => {
   const { registerItemsForCollection } = useSelectionStore();

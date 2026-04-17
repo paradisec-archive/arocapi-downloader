@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getAuthStatus } from '~/server/functions/auth';
-import { useAuthStore } from '~/store/authStore';
+import { getAuthStatus } from '#/server/functions/auth.ts';
+import { useAuthStore } from '#/store/authStore.ts';
 
 export const useAuth = () => {
   const { user, isAuthenticated, isLoading, setUser } = useAuthStore();

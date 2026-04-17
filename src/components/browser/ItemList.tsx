@@ -1,6 +1,6 @@
-import { LoadingSpinner } from '~/components/common/LoadingSpinner';
-import { useItems } from '~/hooks/useItems';
-import { ItemRow } from './ItemRow';
+import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { useItems } from '#/hooks/useItems.ts';
+import { ItemRow } from './ItemRow.tsx';
 
 type ItemListProps = {
   collectionId: string;

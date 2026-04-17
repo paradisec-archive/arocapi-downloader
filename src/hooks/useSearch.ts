@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { searchEntities } from '~/server/functions/search';
-import type { FacetFilters } from '~/shared/types/search';
+import { searchEntities } from '#/server/functions/search.ts';
+import type { FacetFilters } from '#/shared/types/search.ts';
 
 type UseSearchOptions = {
   query: string;

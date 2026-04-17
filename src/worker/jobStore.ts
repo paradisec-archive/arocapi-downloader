@@ -1,4 +1,4 @@
-import type { JobPhase, JobStatus } from '~/shared/types/index';
+import type { JobPhase, JobStatus } from '#/shared/types/index.ts';
 
 type MutableJobState = {
   jobId: string;

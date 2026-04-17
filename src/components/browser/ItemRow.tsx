@@ -1,9 +1,9 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
-import { Button } from '~/components/ui/button';
-import { Checkbox } from '~/components/ui/checkbox';
-import type { Entity } from '~/shared/types/index';
-import { useSelectionStore } from '~/store/selectionStore';
-import { FileList } from './FileList';
+import { Button } from '#/components/ui/button.tsx';
+import { Checkbox } from '#/components/ui/checkbox.tsx';
+import type { Entity } from '#/shared/types/index.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
+import { FileList } from './FileList.tsx';
 
 type ItemRowProps = {
   item: Entity;

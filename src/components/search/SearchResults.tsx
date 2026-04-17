@@ -1,12 +1,12 @@
-import { CollectionItem } from '~/components/browser/CollectionItem';
-import { ItemRow } from '~/components/browser/ItemRow';
-import { LoadingSpinner } from '~/components/common/LoadingSpinner';
-import { ActiveFilterBadges } from '~/components/search/ActiveFilterBadges';
-import { FacetPanel } from '~/components/search/FacetPanel';
-import { Pagination } from '~/components/ui/pagination';
-import { useSearch } from '~/hooks/useSearch';
-import type { Entity } from '~/shared/types/entity';
-import type { FacetFilters } from '~/shared/types/search';
+import { CollectionItem } from '#/components/browser/CollectionItem.tsx';
+import { ItemRow } from '#/components/browser/ItemRow.tsx';
+import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { ActiveFilterBadges } from '#/components/search/ActiveFilterBadges.tsx';
+import { FacetPanel } from '#/components/search/FacetPanel.tsx';
+import { Pagination } from '#/components/ui/pagination.tsx';
+import { useSearch } from '#/hooks/useSearch.ts';
+import type { Entity } from '#/shared/types/entity.ts';
+import type { FacetFilters } from '#/shared/types/search.ts';
 
 type SearchResultsProps = {
   query: string;

@@ -1,10 +1,10 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useMemo } from 'react';
 import { z } from 'zod';
-import { SelectionSummary } from '~/components/browser/SelectionSummary';
-import { SearchResults } from '~/components/search/SearchResults';
-import { getAuthStatus } from '~/server/functions/auth';
-import type { FacetFilters } from '~/shared/types/search';
+import { SelectionSummary } from '#/components/browser/SelectionSummary.tsx';
+import { SearchResults } from '#/components/search/SearchResults.tsx';
+import { getAuthStatus } from '#/server/functions/auth.ts';
+import type { FacetFilters } from '#/shared/types/search.ts';
 
 const FACET_KEYS = ['collection_title', 'languages_with_code', 'countries', 'collector_name', 'full_identifier', 'entity_type'] as const;
 

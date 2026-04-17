@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Button } from '~/components/ui/button';
-import { cn } from '~/lib/utils';
-import type { FacetFilters, Facets } from '~/shared/types/search';
+import { Button } from '#/components/ui/button.tsx';
+import { cn } from '#/lib/utils.ts';
+import type { FacetFilters, Facets } from '#/shared/types/search.ts';
 
-import { FacetCategorySection } from './FacetCategorySection';
+import { FacetCategorySection } from './FacetCategorySection.tsx';
 
 const FACET_LABEL_MAP: Record<string, string> = {
   collection_title: 'Collection',

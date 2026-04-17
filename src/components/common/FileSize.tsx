@@ -1,4 +1,4 @@
-import { formatFileSize } from '~/shared/formatters';
+import { formatFileSize } from '#/shared/formatters.ts';
 
 type FileSizeProps = {
   bytes: number;

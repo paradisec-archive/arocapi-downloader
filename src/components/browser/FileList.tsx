@@ -1,11 +1,11 @@
 import { Lock } from 'lucide-react';
 import { useMemo } from 'react';
-import { FileSize } from '~/components/common/FileSize';
-import { LoadingSpinner } from '~/components/common/LoadingSpinner';
-import { useFiles } from '~/hooks/useFiles';
-import type { RoCrateFile } from '~/shared/types/index';
-import { useSelectionStore } from '~/store/selectionStore';
-import { FileRow } from './FileRow';
+import { FileSize } from '#/components/common/FileSize.tsx';
+import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { useFiles } from '#/hooks/useFiles.ts';
+import type { RoCrateFile } from '#/shared/types/index.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
+import { FileRow } from './FileRow.tsx';
 
 type FileListProps = {
   itemId: string;

@@ -1,10 +1,10 @@
 import { File, Lock, Music, Video } from 'lucide-react';
-import { FileSize } from '~/components/common/FileSize';
-import { Checkbox } from '~/components/ui/checkbox';
-import { cn } from '~/lib/utils';
-import { getFileType, getQualityTier } from '~/shared/types/file';
-import type { RoCrateFile } from '~/shared/types/index';
-import { useSelectionStore } from '~/store/selectionStore';
+import { FileSize } from '#/components/common/FileSize.tsx';
+import { Checkbox } from '#/components/ui/checkbox.tsx';
+import { cn } from '#/lib/utils.ts';
+import { getFileType, getQualityTier } from '#/shared/types/file.ts';
+import type { RoCrateFile } from '#/shared/types/index.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
 
 type FileRowProps = {
   file: RoCrateFile;

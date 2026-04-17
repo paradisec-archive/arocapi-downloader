@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getEntity } from '~/server/functions/entity';
+import { getEntity } from '#/server/functions/entity.ts';
 
 export const useEntity = (entityId: string | undefined) => {
   return useQuery({

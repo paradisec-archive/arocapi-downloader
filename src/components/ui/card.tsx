@@ -1,6 +1,6 @@
 import type * as React from 'react';
 
-import { cn } from '~/lib/utils';
+import { cn } from '#/lib/utils.ts';
 
 function Card({ className, size = 'default', ...props }: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
   return (
@@ -58,4 +58,4 @@ function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent };
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

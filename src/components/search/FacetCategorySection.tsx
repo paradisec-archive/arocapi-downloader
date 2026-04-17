@@ -1,9 +1,9 @@
 import { ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { Checkbox } from '~/components/ui/checkbox';
-import { Input } from '~/components/ui/input';
-import type { FacetBucket } from '~/shared/types/search';
+import { Checkbox } from '#/components/ui/checkbox.tsx';
+import { Input } from '#/components/ui/input.tsx';
+import type { FacetBucket } from '#/shared/types/search.ts';
 
 const INITIAL_VISIBLE = 5;
 

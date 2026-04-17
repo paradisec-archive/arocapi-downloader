@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
-import { config } from '~/server/services/config';
-import type { Entity } from '~/shared/types/index';
+import { config } from '#/server/services/config.ts';
+import type { Entity } from '#/shared/types/index.ts';
 
 const baseUrl = config.ROCRATE_API_BASE_URL;
 

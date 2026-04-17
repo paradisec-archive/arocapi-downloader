@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cn } from '~/lib/utils';
+import { cn } from '#/lib/utils.ts';
 
 type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   onCheckedChange?: (checked: boolean) => void;

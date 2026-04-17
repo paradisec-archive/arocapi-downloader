@@ -1,4 +1,4 @@
-import type { EntityRef } from './file';
+import type { EntityRef } from './file.ts';
 
 export type EntityType = 'http://pcdm.org/models#Collection' | 'http://pcdm.org/models#Object' | 'http://schema.org/MediaObject';
 

@@ -3,11 +3,11 @@ import { useNavigate } from '@tanstack/react-router';
 import { Download, Loader2, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { FileSize } from '~/components/common/FileSize';
-import { LoadingSpinner } from '~/components/common/LoadingSpinner';
-import { Button } from '~/components/ui/button';
-import { submitExport } from '~/server/functions/export';
-import { useSelectionStore } from '~/store/selectionStore';
+import { FileSize } from '#/components/common/FileSize.tsx';
+import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { Button } from '#/components/ui/button.tsx';
+import { submitExport } from '#/server/functions/export.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
 
 type SelectionSummaryProps = {
   userEmail?: string | undefined;

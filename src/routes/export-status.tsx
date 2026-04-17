@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertTriangle, CheckCircle, Download, Info, Loader2, MemoryStick, XCircle } from 'lucide-react';
 import { z } from 'zod';
-import { buttonVariants } from '~/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
-import { getJobStatus } from '~/server/functions/export';
-import { formatFileSize } from '~/shared/formatters';
-import type { JobPhase, JobStatus } from '~/shared/types/index';
+import { buttonVariants } from '#/components/ui/button.tsx';
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card.tsx';
+import { getJobStatus } from '#/server/functions/export.ts';
+import { formatFileSize } from '#/shared/formatters.ts';
+import type { JobPhase, JobStatus } from '#/shared/types/index.ts';
 
 const searchSchema = z.object({
   jobId: z.string().uuid(),

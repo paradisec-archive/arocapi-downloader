@@ -1,11 +1,11 @@
 import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
-import { LoadingSpinner } from '~/components/common/LoadingSpinner';
-import { Button } from '~/components/ui/button';
-import { Checkbox } from '~/components/ui/checkbox';
-import { useEntity } from '~/hooks/useEntity';
-import type { Entity } from '~/shared/types/index';
-import { useSelectionStore } from '~/store/selectionStore';
-import { ItemList } from './ItemList';
+import { LoadingSpinner } from '#/components/common/LoadingSpinner.tsx';
+import { Button } from '#/components/ui/button.tsx';
+import { Checkbox } from '#/components/ui/checkbox.tsx';
+import { useEntity } from '#/hooks/useEntity.ts';
+import type { Entity } from '#/shared/types/index.ts';
+import { useSelectionStore } from '#/store/selectionStore.ts';
+import { ItemList } from './ItemList.tsx';
 
 type CollectionItemProps = {
   collectionId: string;

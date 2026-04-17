@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { config } from './config';
+import { config } from './config.ts';
 
 type OidcConfig = {
   authorization_endpoint: string;

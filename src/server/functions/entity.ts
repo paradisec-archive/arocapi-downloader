@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import { getCookie } from '~/server/services/cookies';
-import * as rocrate from '~/server/services/rocrate';
-import type { Entity } from '~/shared/types/index';
+import { getCookie } from '#/server/services/cookies.ts';
+import * as rocrate from '#/server/services/rocrate.ts';
+import type { Entity } from '#/shared/types/index.ts';
 
 const entitySchema = z.object({
   id: z.string().min(1),

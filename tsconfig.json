@@ -37,11 +37,7 @@
     "resolveJsonModule": true, // Import .json files
 
     "noEmit": true, // TS only for type checking
-
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    }
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules"]

@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import { getCookie } from '~/server/services/cookies';
-import * as rocrate from '~/server/services/rocrate';
-import type { Entity, PaginatedEntitiesResponse } from '~/shared/types/index';
+import { getCookie } from '#/server/services/cookies.ts';
+import * as rocrate from '#/server/services/rocrate.ts';
+import type { Entity, PaginatedEntitiesResponse } from '#/shared/types/index.ts';
 
 const collectionItemsSchema = z.object({
   collectionId: z.string().min(1),

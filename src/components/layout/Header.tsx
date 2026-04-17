@@ -1,7 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router';
-import { SearchBar } from '~/components/search/SearchBar';
-import { Button } from '~/components/ui/button';
-import { useAuth } from '~/hooks/useAuth';
+import { SearchBar } from '#/components/search/SearchBar.tsx';
+import { Button } from '#/components/ui/button.tsx';
+import { useAuth } from '#/hooks/useAuth.ts';
 
 export const Header = () => {
   const { user, isAuthenticated, isLoading, login, logout } = useAuth();

@@ -1,4 +1,4 @@
-import type { RoCrateFile } from './file';
+import type { RoCrateFile } from './file.ts';
 
 export type ExportFileInfo = Pick<RoCrateFile, 'id' | 'filename' | 'size' | 'memberOf'>;
 

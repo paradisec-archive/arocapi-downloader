@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 
-import type { FacetFilters } from '~/shared/types/search';
+import type { FacetFilters } from '#/shared/types/search.ts';
 
 const FACET_LABEL_MAP: Record<string, string> = {
   collection_title: 'Collection',

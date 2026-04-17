@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { Button } from '~/components/ui/button';
-import { useAuth } from '~/hooks/useAuth';
-import { getAuthStatus } from '~/server/functions/auth';
+import { Button } from '#/components/ui/button.tsx';
+import { useAuth } from '#/hooks/useAuth.ts';
+import { getAuthStatus } from '#/server/functions/auth.ts';
 
 const HomePage = () => {
   const { login } = useAuth();

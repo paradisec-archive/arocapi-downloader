@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-import { getCookie } from '~/server/services/cookies';
-import * as rocrate from '~/server/services/rocrate';
-import type { SearchRequest } from '~/shared/types/index';
+import { getCookie } from '#/server/services/cookies.ts';
+import * as rocrate from '#/server/services/rocrate.ts';
+import type { SearchRequest } from '#/shared/types/index.ts';
 
 const searchSchema = z.object({
   query: z.string(),

@@ -1,9 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Search, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { cn } from '~/lib/utils';
+import { Button } from '#/components/ui/button.tsx';
+import { Input } from '#/components/ui/input.tsx';
+import { cn } from '#/lib/utils.ts';
 
 type SearchBarProps = {
   initialQuery?: string;

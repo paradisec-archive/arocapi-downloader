@@ -2,8 +2,8 @@
 import { createRootRoute, HeadContent, Link, Outlet, Scripts } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
-import { Header } from '~/components/layout/Header';
-import '~/styles.css';
+import { Header } from '#/components/layout/Header.tsx';
+import '../styles.css';
 
 function NotFoundComponent() {
   return (

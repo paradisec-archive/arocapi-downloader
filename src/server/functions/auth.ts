@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
-import { getCookie } from '~/server/services/cookies';
-import type { AuthStatus, AuthUser } from '~/shared/types/auth';
+import { getCookie } from '#/server/services/cookies.ts';
+import type { AuthStatus, AuthUser } from '#/shared/types/auth.ts';
 
 export const getAuthStatus = createServerFn({ method: 'GET' }).handler(async (): Promise<AuthStatus> => {
   const accessToken = getCookie('access_token');

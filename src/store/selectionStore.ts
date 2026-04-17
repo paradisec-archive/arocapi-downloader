@@ -1,7 +1,7 @@
 import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback } from 'react';
-import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_IMAGE_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '~/shared/types/file';
-import type { Entity, RoCrateFile } from '~/shared/types/index';
+import { ARCHIVAL_AUDIO_TYPES, ARCHIVAL_IMAGE_TYPES, ARCHIVAL_VIDEO_TYPES, getFileType } from '#/shared/types/file.ts';
+import type { Entity, RoCrateFile } from '#/shared/types/index.ts';
 
 type SelectionStateType = 'full' | 'partial' | 'none';
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { config } from '~/server/services/config';
-import { type CookieOptions, getCookieFromRequest, serializeCookie } from '~/server/services/cookies';
-import { exchangeCodeForTokens, getUserInfo, type UserInfo, verifyIdToken } from '~/server/services/oidc';
+import { config } from '#/server/services/config.ts';
+import { type CookieOptions, getCookieFromRequest, serializeCookie } from '#/server/services/cookies.ts';
+import { exchangeCodeForTokens, getUserInfo, type UserInfo, verifyIdToken } from '#/server/services/oidc.ts';
 
 const createCookieOptions = (maxAge: number): CookieOptions => ({
   httpOnly: true,

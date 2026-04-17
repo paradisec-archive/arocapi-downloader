@@ -2,8 +2,8 @@ import type { Readable } from 'node:stream';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { config } from '~/server/services/config';
-import { PRESIGNED_URL_EXPIRY_SECONDS } from '~/shared/constants';
+import { config } from '#/server/services/config.ts';
+import { PRESIGNED_URL_EXPIRY_SECONDS } from '#/shared/constants.ts';
 
 const s3Client = new S3Client({ region: config.AWS_REGION });
 
