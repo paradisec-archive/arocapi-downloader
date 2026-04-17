@@ -1,4 +1,11 @@
-onlyBuiltDependencies:
-  - esbuild
-  - lefthook
-  - msw
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  msw: true
+
+# Supply chain security
+# https://pnpm.io/supply-chain-security
+strictDepBuilds: true
+blockExoticSubdeps: true
+minimumReleaseAge: 4320 # 3 days
+trustPolicy: no-downgrade
