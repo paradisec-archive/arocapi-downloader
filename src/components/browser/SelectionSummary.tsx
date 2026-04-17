@@ -17,7 +17,7 @@ const emailSchema = z.string().trim().min(1, 'Email is required').email('Please 
 
 export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
   const navigate = useNavigate();
-  const { getSelectedFiles, getTotalSelectedSize, clearSelection, getPendingInfo } = useSelectionStore();
+  const { getSelectedFiles, getTotalSelectedSize, clearSelection, getPendingInfo, selectedItems } = useSelectionStore();
 
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -45,6 +45,7 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
             size: f.size,
             memberOf: f.memberOf,
           })),
+          items: Array.from(selectedItems).map((id) => ({ id })),
           email,
         },
       }),
@@ -90,7 +91,7 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
     clearSelection();
   };
 
-  if (selectedFiles.length === 0 && !hasPending) {
+  if (selectedFiles.length === 0 && selectedItems.size === 0 && !hasPending) {
     return null;
   }
 

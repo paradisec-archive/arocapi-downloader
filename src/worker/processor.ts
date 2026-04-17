@@ -1,5 +1,5 @@
 import { formatFileSize } from '#/shared/formatters.ts';
-import type { ExportFileInfo, ExportJobMessage } from '#/shared/types/index.ts';
+import type { ExportFileInfo, ExportItemInfo, ExportJobMessage } from '#/shared/types/index.ts';
 import { completeJob, failJob, updateJobDownloadProgress, updateJobPhase, updateJobStreamedBytes, updateJobTotalSize } from './jobStore.ts';
 import { sendDownloadEmail } from './services/email.ts';
 import { fetchFileStream, fetchRoCrateMetadata, getEntityMetadata } from './services/rocrate.ts';
@@ -24,25 +24,41 @@ const extractPathFromId = (entityId: string): string => {
   }
 };
 
-const groupFilesByItem = async (files: ExportFileInfo[], accessToken?: string): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
+const groupFilesByItem = async (
+  items: ExportItemInfo[],
+  files: ExportFileInfo[],
+  accessToken?: string,
+): Promise<{ filesByItem: FilesByItem; totalSize: number }> => {
   const filesByItem: FilesByItem = new Map();
   const itemCache = new Map<string, string>(); // itemId -> collectionId
   let totalSize = 0;
 
+  const resolveCollectionId = async (itemId: string): Promise<string> => {
+    const cached = itemCache.get(itemId);
+    if (cached) return cached;
+
+    console.log(`Fetching metadata for item: ${itemId}`);
+    const itemMetadata = await getEntityMetadata(itemId, accessToken);
+    const collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
+    itemCache.set(itemId, collectionId);
+
+    return collectionId;
+  };
+
+  // Seed with every explicitly selected item so empty items still get a directory
+  for (const { id: itemId } of items) {
+    const collectionId = await resolveCollectionId(itemId);
+    const key = `${collectionId}/${itemId}`;
+    if (!filesByItem.has(key)) {
+      filesByItem.set(key, { itemId, collectionId, files: [] });
+    }
+  }
+
   for (const file of files) {
     totalSize += file.size;
     const itemId = file.memberOf.id;
+    const collectionId = await resolveCollectionId(itemId);
 
-    // Get collection ID for this item (with caching)
-    let collectionId = itemCache.get(itemId);
-    if (!collectionId) {
-      console.log(`Fetching metadata for item: ${itemId}`);
-      const itemMetadata = await getEntityMetadata(itemId, accessToken);
-      collectionId = itemMetadata.memberOf?.id || 'unknown-collection';
-      itemCache.set(itemId, collectionId);
-    }
-
-    // Group files by item
     const key = `${collectionId}/${itemId}`;
     const existing = filesByItem.get(key);
     if (existing) {
@@ -56,14 +72,14 @@ const groupFilesByItem = async (files: ExportFileInfo[], accessToken?: string): 
 };
 
 export const processJob = async (job: ExportJobMessage): Promise<void> => {
-  const { jobId, files, email, accessToken } = job;
+  const { jobId, files, items, email, accessToken } = job;
 
-  console.log(`Processing job ${jobId}: ${files.length} files for ${email}`);
+  console.log(`Processing job ${jobId}: ${files.length} files, ${items.length} items for ${email}`);
 
   // Group files by collection/item hierarchy
   console.log('Grouping files by collection and item...');
   updateJobPhase(jobId, 'grouping');
-  const { filesByItem, totalSize } = await groupFilesByItem(files, accessToken);
+  const { filesByItem, totalSize } = await groupFilesByItem(items, files, accessToken);
   updateJobTotalSize(jobId, totalSize);
 
   // Streaming phase: fetch → zip → S3 in one pipeline

@@ -2,6 +2,8 @@ import type { RoCrateFile } from './file.ts';
 
 export type ExportFileInfo = Pick<RoCrateFile, 'id' | 'filename' | 'size' | 'memberOf'>;
 
+export type ExportItemInfo = { id: string };
+
 export type JobPhase = 'grouping' | 'downloading' | 'emailing' | 'complete' | 'failed';
 
 export type JobStatus = {
@@ -22,6 +24,7 @@ export type JobStatus = {
 export type ExportJobMessage = {
   jobId: string;
   files: ExportFileInfo[];
+  items: ExportItemInfo[];
   email: string;
   accessToken: string;
   requestedAt: string;

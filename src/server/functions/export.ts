@@ -15,10 +15,19 @@ const exportFileSchema = z.object({
   }),
 });
 
-const exportRequestSchema = z.object({
-  files: z.array(exportFileSchema).min(1, 'At least one file must be selected'),
-  email: z.email('Valid email required'),
+const exportItemSchema = z.object({
+  id: z.string(),
 });
+
+const exportRequestSchema = z
+  .object({
+    files: z.array(exportFileSchema).default([]),
+    items: z.array(exportItemSchema).default([]),
+    email: z.email('Valid email required'),
+  })
+  .refine((data) => data.files.length + data.items.length >= 1, {
+    message: 'At least one file or item must be selected',
+  });
 
 type ExportResponse = {
   success: boolean;
@@ -47,6 +56,7 @@ export const submitExport = createServerFn({ method: 'POST' })
     const job: ExportJobMessage = {
       jobId,
       files: data.files,
+      items: data.items,
       email: data.email,
       accessToken,
       requestedAt: new Date().toISOString(),
