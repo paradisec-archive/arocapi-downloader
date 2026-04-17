@@ -3,20 +3,20 @@ import { useEffect } from 'react';
 import { getFilesInItem } from '#/server/functions/items.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 
-export const useFiles = (itemId: string, enabled = true, limit = 100, offset = 0) => {
+export const useFiles = (itemId: string, enabled = true) => {
   const { addFileMetadata, registerFilesForItem } = useSelectionStore();
 
   const query = useQuery({
-    queryKey: ['files', itemId, limit, offset],
-    queryFn: () => getFilesInItem({ data: { itemId, limit, offset } }),
+    queryKey: ['files', itemId],
+    queryFn: () => getFilesInItem({ data: { itemId } }),
     staleTime: 5 * 60 * 1000,
     enabled: enabled && !!itemId,
   });
 
   useEffect(() => {
-    if (query.data?.files) {
-      addFileMetadata(query.data.files);
-      registerFilesForItem(itemId, query.data.files);
+    if (query.data) {
+      addFileMetadata(query.data);
+      registerFilesForItem(itemId, query.data);
     }
   }, [query.data, itemId, addFileMetadata, registerFilesForItem]);
 

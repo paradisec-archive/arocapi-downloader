@@ -19,7 +19,7 @@ function NotFoundComponent() {
 
 export const Route = createRootRoute({
   head: () => ({
-    meta: [{ charSet: 'utf-8' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }, { title: 'RO-Crate Downloader' }],
+    meta: [{ charSet: 'utf-8' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }, { title: 'Collection Downloader' }],
   }),
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -43,7 +43,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <div className="min-h-screen flex flex-col">
           <Header />
           <main className="flex-1 container mx-auto px-4 py-6">{children}</main>
-          <footer className="border-t py-4 text-center text-sm text-muted-foreground">RO-Crate Downloader v{__APP_VERSION__}</footer>
+          <footer className="border-t py-4 text-center text-sm text-muted-foreground">Collection Downloader v{__APP_VERSION__}</footer>
         </div>
         <Scripts />
       </body>

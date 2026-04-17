@@ -1,4 +1,4 @@
-# RO-Crate API Downloader
+# Collection Downloader
 
 A web application for browsing RO-Crate collections hierarchically, selecting files with quality tier filtering, and requesting zip downloads via email.
 

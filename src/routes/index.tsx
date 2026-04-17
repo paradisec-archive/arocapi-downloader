@@ -8,9 +8,9 @@ const HomePage = () => {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold">RO-Crate Downloader</h1>
+      <h1 className="text-4xl font-bold">Collections Downloader</h1>
       <p className="max-w-md text-center text-lg text-muted-foreground">
-        Browse and download files from RO-Crate collections. Select the files you need and receive a download link via email.
+        Browse and download files from RO-Crate based collections. Select the files you need and receive a download link via email.
       </p>
       <Button size="lg" onClick={login}>
         Sign in to get started

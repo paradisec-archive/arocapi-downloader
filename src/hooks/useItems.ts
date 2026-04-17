@@ -3,19 +3,19 @@ import { useEffect } from 'react';
 import { getItemsInCollection } from '#/server/functions/collections.ts';
 import { useSelectionStore } from '#/store/selectionStore.ts';
 
-export const useItems = (collectionId: string, enabled = true, limit = 50, offset = 0) => {
+export const useItems = (collectionId: string, enabled = true) => {
   const { registerItemsForCollection } = useSelectionStore();
 
   const query = useQuery({
-    queryKey: ['items', collectionId, limit, offset],
-    queryFn: () => getItemsInCollection({ data: { collectionId, limit, offset } }),
+    queryKey: ['items', collectionId],
+    queryFn: () => getItemsInCollection({ data: { collectionId } }),
     staleTime: 5 * 60 * 1000,
     enabled: enabled && !!collectionId,
   });
 
   useEffect(() => {
-    if (query.data?.entities) {
-      registerItemsForCollection(collectionId, query.data.entities);
+    if (query.data) {
+      registerItemsForCollection(collectionId, query.data);
     }
   }, [query.data, collectionId, registerItemsForCollection]);
 

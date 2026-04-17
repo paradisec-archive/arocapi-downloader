@@ -22,16 +22,16 @@ export const ItemList = ({ collectionId }: ItemListProps) => {
     return <div className="py-4 text-sm text-destructive">Error loading items: {error.message}</div>;
   }
 
-  if (!data?.entities.length) {
+  if (!data?.length) {
     return <div className="py-4 text-sm text-muted-foreground">No items found in this collection.</div>;
   }
 
   return (
     <div className="space-y-2">
       <div className="text-sm text-muted-foreground mb-2">
-        {data.total} item{data.total !== 1 ? 's' : ''}
+        {data.length} item{data.length !== 1 ? 's' : ''}
       </div>
-      {data.entities.map((item) => (
+      {data.map((item) => (
         <ItemRow key={item.id} item={item} />
       ))}
     </div>

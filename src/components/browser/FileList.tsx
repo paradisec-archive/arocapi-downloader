@@ -16,18 +16,17 @@ export const FileList = ({ itemId }: FileListProps) => {
   const { isFileIncluded, selectedFiles } = useSelectionStore();
 
   const { allFiles, includedCount, totalSize, selectedSize, restrictedCount } = useMemo(() => {
-    if (!data?.files) {
+    if (!data) {
       return { allFiles: [], includedCount: 0, totalSize: 0, selectedSize: 0, restrictedCount: 0 };
     }
 
-    const files = data.files as RoCrateFile[];
-    const included = files.filter((file) => isFileIncluded(file) && file.access?.content !== false);
-    const restricted = files.filter((file) => file.access?.content === false);
+    const included = data.filter((file) => isFileIncluded(file) && file.access?.content !== false);
+    const restricted = data.filter((file) => file.access?.content === false);
     const total = included.reduce((sum: number, file: RoCrateFile) => sum + file.size, 0);
     const selected = included.filter((file) => selectedFiles.has(file.id)).reduce((sum: number, file: RoCrateFile) => sum + file.size, 0);
 
     return {
-      allFiles: files,
+      allFiles: data,
       includedCount: included.length,
       totalSize: total,
       selectedSize: selected,

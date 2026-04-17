@@ -75,28 +75,42 @@ const postToApi = async <T>(endpoint: string, options: PostOptions): Promise<T> 
   return data;
 };
 
-export const getItemsInCollection = async (collectionId: string, limit = 50, offset = 0, token?: string): Promise<PaginatedEntitiesResponse<Entity>> => {
-  return fetchFromApi<PaginatedEntitiesResponse<Entity>>('/entities', {
-    params: {
-      memberOf: collectionId,
-      entityType: 'http://pcdm.org/models#Object',
-      limit,
-      offset,
-    },
-    token,
-  });
+const PAGE_SIZE = 500;
+
+const fetchAllPages = async <TPage extends { total: number }, TItem>(
+  endpoint: string,
+  extractItems: (page: TPage) => TItem[],
+  params: Record<string, string | number | undefined>,
+  token?: string,
+): Promise<TItem[]> => {
+  const all: TItem[] = [];
+  let offset = 0;
+
+  while (true) {
+    const page = await fetchFromApi<TPage>(endpoint, {
+      params: { ...params, limit: PAGE_SIZE, offset },
+      token,
+    });
+
+    const items = extractItems(page);
+    all.push(...items);
+    if (items.length === 0 || all.length >= page.total) break;
+    offset += items.length;
+  }
+
+  return all;
 };
 
-export const getFilesInItem = async (itemId: string, limit = 100, offset = 0, token?: string): Promise<PaginatedFilesResponse<RoCrateFile>> => {
-  return fetchFromApi<PaginatedFilesResponse<RoCrateFile>>('/files', {
-    params: {
-      memberOf: itemId,
-      limit,
-      offset,
-    },
+export const getItemsInCollection = (collectionId: string, token?: string): Promise<Entity[]> =>
+  fetchAllPages<PaginatedEntitiesResponse<Entity>, Entity>(
+    '/entities',
+    (page) => page.entities,
+    { memberOf: collectionId, entityType: 'http://pcdm.org/models#Object' },
     token,
-  });
-};
+  );
+
+export const getFilesInItem = (itemId: string, token?: string): Promise<RoCrateFile[]> =>
+  fetchAllPages<PaginatedFilesResponse<RoCrateFile>, RoCrateFile>('/files', (page) => page.files, { memberOf: itemId }, token);
 
 export const getEntity = async (id: string, token?: string): Promise<Entity> => {
   return fetchFromApi<Entity>(`/entity/${encodeURIComponent(id)}`, { token });

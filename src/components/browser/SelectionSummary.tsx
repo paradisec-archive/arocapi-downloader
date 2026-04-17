@@ -17,7 +17,7 @@ const emailSchema = z.string().trim().min(1, 'Email is required').email('Please 
 
 export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
   const navigate = useNavigate();
-  const { getSelectedFiles, getTotalSelectedSize, clearSelection, getPendingInfo, selectedItems } = useSelectionStore();
+  const { getSelectedFiles, getTotalSelectedSize, clearSelection, getPendingInfo, selectedCollections, selectedItems } = useSelectionStore();
 
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [emailInput, setEmailInput] = useState('');
@@ -101,6 +101,7 @@ export const SelectionSummary = ({ userEmail }: SelectionSummaryProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">
+              {selectedCollections.size} collection{selectedCollections.size !== 1 ? 's' : ''}, {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''},{' '}
               {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
             </span>
             <span className="text-sm text-muted-foreground">

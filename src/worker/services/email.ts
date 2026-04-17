@@ -47,7 +47,7 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize,
   const allFailed = !downloadUrl;
   const hasMissing = missingFiles && missingFiles.length > 0;
 
-  const subject = allFailed ? 'Your RO-Crate download could not be completed' : 'Your RO-Crate download is ready';
+  const subject = allFailed ? 'Your download could not be completed' : 'Your download is ready';
 
   const htmlBody = allFailed
     ? `
@@ -68,7 +68,7 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize,
   <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
 
   <p style="color: #999; font-size: 12px;">
-    RO-Crate Downloader
+    Collections Downloader
   </p>
 </body>
 </html>`
@@ -101,7 +101,7 @@ export const sendDownloadEmail = async ({ to, downloadUrl, fileCount, totalSize,
   <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
 
   <p style="color: #999; font-size: 12px;">
-    RO-Crate Downloader
+    Collections Downloader
   </p>
 </body>
 </html>`;

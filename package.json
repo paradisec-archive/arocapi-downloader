@@ -1,7 +1,7 @@
 {
   "name": "arocapi-downloader",
   "version": "1.8.2",
-  "description": "RO-Crate API downloader web application",
+  "description": "RO-Crate based collection downloader",
   "type": "module",
   "imports": {
     "#/*": "./src/*"

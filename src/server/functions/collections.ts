@@ -2,18 +2,16 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { getCookie } from '#/server/services/cookies.ts';
 import * as rocrate from '#/server/services/rocrate.ts';
-import type { Entity, PaginatedEntitiesResponse } from '#/shared/types/index.ts';
+import type { Entity } from '#/shared/types/index.ts';
 
 const collectionItemsSchema = z.object({
   collectionId: z.string().min(1),
-  limit: z.number().int().positive().optional(),
-  offset: z.number().int().nonnegative().optional(),
 });
 
 export const getItemsInCollection = createServerFn({ method: 'GET' })
   .inputValidator(collectionItemsSchema)
-  .handler(async ({ data }): Promise<PaginatedEntitiesResponse<Entity>> => {
+  .handler(async ({ data }): Promise<Entity[]> => {
     const token = getCookie('access_token');
 
-    return rocrate.getItemsInCollection(data.collectionId, data.limit ?? 50, data.offset ?? 0, token);
+    return rocrate.getItemsInCollection(data.collectionId, token);
   });
